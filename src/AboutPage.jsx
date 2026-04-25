@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Award, Users, TrendingUp, Star, Calendar, Globe } from 'lucide-react';
 import { FaYoutube, FaLinkedin, FaFacebook } from 'react-icons/fa';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import logo from './assets/logo.png';
 import spyImg from '/SPY06731.jpg.jpeg';
 import deepImg from '/DEEP3037.jpg.jpeg';
@@ -97,19 +99,7 @@ export default function AboutPage() {
   return (
     <>
       {/* NAVBAR */}
-      <nav className="navbar" id="top">
-        <div className="container nav-inner">
-          <Link to="/">
-            <img src={logo} alt="Grow Wave Media" className="nav-logo" />
-          </Link>
-          <div className="nav-links">
-            <Link to="/#about" className="nav-link">About</Link>
-            <Link to="/#services" className="nav-link">Services</Link>
-            <Link to="/#contact" className="nav-link">Contact</Link>
-          </div>
-          <Link to="/#contact" className="nav-cta">Book a free call</Link>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* HERO BANNER */}
       <section className="about-hero">
@@ -285,48 +275,7 @@ export default function AboutPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="footer">
-        <div className="footer-top container">
-          <div>
-            <img src={logo} alt="Grow Wave Media" className="footer-logo" />
-            <p className="footer-about">Digital Marketing Agency for IT Startups</p>
-            <div className="footer-address">Grow Wave Media<br />New Delhi, India</div>
-          </div>
-          <div>
-            <h4>Contact us</h4>
-            <ul className="footer-list">
-              <li><a href="mailto:growwavemedia@gmail.com">growwavemedia@gmail.com</a></li>
-              <li><a href="tel:+917063363898">+91 70633 63898</a></li>
-            </ul>
-            <div className="footer-socials">
-              <a href="#" aria-label="YouTube"><FaYoutube size={16} /></a>
-              <a href="#" aria-label="LinkedIn"><FaLinkedin size={16} /></a>
-              <a href="#" aria-label="Facebook"><FaFacebook size={16} /></a>
-            </div>
-          </div>
-          <div>
-            <h4>Navigation</h4>
-            <ul className="footer-list">
-              <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/#services">Services</Link></li>
-              <li><Link to="/#contact">Contact</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4>Services</h4>
-            <ul className="footer-list">
-              <li><Link to="/#services">Google Search Advertising</Link></li>
-              <li><Link to="/#services">Display Advertising</Link></li>
-              <li><Link to="/#services">Facebook Advertising</Link></li>
-              <li><Link to="/#services">Website Development</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="footer-bottom container">
-          <span>&#169; {new Date().getFullYear()} Grow Wave Media. All rights reserved.</span>
-          <span>Built for IT Startups. Built to grow.</span>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }
