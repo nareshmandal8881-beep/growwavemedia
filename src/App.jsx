@@ -46,11 +46,11 @@ const stats = [
   { num: '1L+',   label: 'Influencers' },
   { num: '1000+', label: 'Sign-ups in a day' },
   { num: '2',     label: 'Years in market' },
-  { num: '57+',   label: 'Projects completed' },
+  { num: '100+',  label: 'Projects completed' },
 ];
 
 const features = [
-  { title: 'Proven Track Record',    desc: '57+ successful campaigns across IT verticals.' },
+  { title: 'Proven Track Record',    desc: '100+ successful campaigns across IT verticals.' },
   { title: 'IT-Sector Expertise',    desc: 'We speak the language of founders and tech teams.' },
   { title: '1L+ Influencer Network', desc: 'Ready-to-activate creators in your niche.' },
   { title: 'Data-Driven Growth',     desc: 'Every decision backed by numbers, not guesswork.' },

@@ -33,7 +33,7 @@ const awards = [
 const stats = [
   { icon: <Users size={22} />, num: '50,000+', label: 'Creators Connected' },
   { icon: <Globe size={22} />, num: '100+', label: 'Brand Partnerships' },
-  { icon: <TrendingUp size={22} />, num: '57+', label: 'Projects Completed' },
+  { icon: <TrendingUp size={22} />, num: '100+', label: 'Projects Completed' },
   { icon: <Calendar size={22} />, num: '2019', label: 'Journey Started' },
 ];
 
