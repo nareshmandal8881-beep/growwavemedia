@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Menu, X, Play, CheckCircle2, ChevronRight,
   TrendingUp, Users, Target, Zap, Rocket,
@@ -83,6 +84,52 @@ const brands = [
   { name: 'D2C Brand',  img: brandImages    },
 ];
 
+const Counter = ({ value, duration = 2000 }) => {
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setIsVisible(true);
+      },
+      { threshold: 0.1 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    const numMatch = value.match(/\d+/);
+    if (!numMatch) {
+      setCount(value);
+      return;
+    }
+    const target = parseInt(numMatch[0]);
+    const suffix = value.replace(numMatch[0], '');
+    let start = 0;
+    const stepTime = 16;
+    const steps = duration / stepTime;
+    const increment = target / steps;
+
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= target) {
+        setCount(target + suffix);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start) + suffix);
+      }
+    }, stepTime);
+
+    return () => clearInterval(timer);
+  }, [isVisible, value, duration]);
+
+  return <span ref={ref}>{count || '0'}</span>;
+};
+
 export default function App() {
   const navRef = useRef(null);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', message: '' });
@@ -131,7 +178,7 @@ export default function App() {
         <div className="container nav-inner">
           <img src={logo} alt="Grow Wave Media" className="nav-logo" />
           <div className="nav-links">
-            <a href="#about"    className="nav-link">About</a>
+            <Link to="/about"   className="nav-link">About Us</Link>
             <a href="#services" className="nav-link">Services</a>
             <a href="#contact"  className="nav-link">Contact</a>
           </div>
@@ -183,7 +230,9 @@ export default function App() {
         <div className="hero-stats container">
           {stats.map((s, i) => (
             <div className="hstat" key={i}>
-              <span className="hstat-num">{s.num}</span>
+              <span className="hstat-num">
+                <Counter value={s.num} />
+              </span>
               <span className="hstat-label">{s.label}</span>
             </div>
           ))}
