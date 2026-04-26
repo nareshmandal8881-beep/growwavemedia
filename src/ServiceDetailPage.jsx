@@ -190,6 +190,25 @@ export default function ServiceDetailPage() {
               </div>
             )}
 
+            {/* Image Gallery (for services with images data) */}
+            {service.images && (
+              <div className="sdp-card sdp-reveal">
+                <div className="sdp-card-label">Our Work</div>
+                <h2 className="sdp-card-h2">Design Portfolio</h2>
+                <div className="sdp-img-gallery">
+                  {service.images.map((img, i) => (
+                    <div
+                      key={i}
+                      className="sdp-img-item sdp-reveal"
+                      style={{ transitionDelay: `${i * 0.1}s` }}
+                    >
+                      <img src={img.src} alt={img.alt} className="sdp-gallery-img" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Technologies (if any) */}
             {service.technologies && (
               <div className="sdp-card sdp-reveal">

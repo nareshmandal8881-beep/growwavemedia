@@ -6,6 +6,10 @@ import {
   Code, Smartphone, Globe
 } from 'lucide-react';
 
+import grafixImg1 from '../assets/1000817479.jpg.jpeg';
+import grafixImg2 from '../assets/1000817480.jpg.jpeg';
+import grafixImg3 from '../assets/1000817481.jpg.jpeg';
+
 export const servicesData = {
   'influencer-marketing': {
     title: 'Influencer Marketing',
@@ -98,6 +102,11 @@ export const servicesData = {
       'Social Media Graphics',
       'Landing Page Design',
       'Print & Digital Assets'
+    ],
+    images: [
+      { src: grafixImg1, alt: 'Grafix Design Work 1' },
+      { src: grafixImg2, alt: 'Grafix Design Work 2' },
+      { src: grafixImg3, alt: 'Grafix Design Work 3' },
     ]
   },
   'website-development': {
