@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaYoutube, FaLinkedin, FaFacebook } from 'react-icons/fa';
+import { FaYoutube, FaLinkedin, FaFacebook, FaInstagram } from 'react-icons/fa';
 import logo from '../assets/logo.png';
 
 export default function Footer() {
@@ -15,7 +15,7 @@ export default function Footer() {
           </p>
           <div className="footer-address">
             Grow Wave Media<br />
-            New Delhi, India
+            Kolkata, India
           </div>
         </div>
 
@@ -23,10 +23,11 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Contact us</h4>
           <ul className="footer-list">
-            <li><a href="mailto:growwavemedia@gmail.com">growwavemedia@gmail.com</a></li>
+            <li><a href="mailto:info@growwavemedia.com">info@growwavemedia.com</a></li>
             <li><a href="tel:+917063363898">+91 70633 63898</a></li>
           </ul>
           <div className="footer-socials">
+            <a href="https://www.instagram.com/grow_wave_media?igsh=MTdxMWhibTNlemc0ZQ==" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><FaInstagram size={16} /></a>
             <a href="#" aria-label="YouTube"><FaYoutube size={16} /></a>
             <a href="#" aria-label="LinkedIn"><FaLinkedin size={16} /></a>
             <a href="#" aria-label="Facebook"><FaFacebook size={16} /></a>

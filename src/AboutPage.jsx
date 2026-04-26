@@ -190,7 +190,7 @@ export default function AboutPage() {
       <section className="about-timeline-section">
         <div className="container">
           <div className="about-section-head reveal">
-            <div className="eyebrow" style={{ color: 'var(--ink)', background: 'rgba(74,255,145,0.12)', borderColor: 'rgba(74,255,145,0.3)' }}>
+            <div className="eyebrow" style={{ color: 'var(--ink)', background: 'rgba(56,207,255,0.12)', borderColor: 'rgba(56,207,255,0.3)' }}>
               The Journey
             </div>
             <h2 className="about-timeline-h2">From Creator to Agency Founder</h2>

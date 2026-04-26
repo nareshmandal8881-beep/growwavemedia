@@ -45,7 +45,7 @@ const tickerItems = [
 const stats = [
   { num: '1L+',   label: 'Influencers' },
   { num: '1000+', label: 'Sign-ups in a day' },
-  { num: '2',     label: 'Years in market' },
+  { num: '5',     label: 'Years in market' },
   { num: '100+',  label: 'Projects completed' },
 ];
 
