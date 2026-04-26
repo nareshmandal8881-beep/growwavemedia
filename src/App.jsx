@@ -350,7 +350,7 @@ export default function App() {
             <div className="contact-info">
               <div className="contact-info-item">
                 <span className="ci-label">Email</span>
-                <span>info@growwavemedia.com</span>
+                <span>growwavemedia@gmail.com</span>
               </div>
               <div className="contact-info-item">
                 <span className="ci-label">Founder</span>
@@ -432,7 +432,7 @@ export default function App() {
               )}
               {status === 'error' && (
                 <div className="form-status error">
-                  Something went wrong. Please email us directly at info@growwavemedia.com
+                  Something went wrong. Please email us directly at growwavemedia@gmail.com
                 </div>
               )}
             </form>

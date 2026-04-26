@@ -23,7 +23,7 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Contact us</h4>
           <ul className="footer-list">
-            <li><a href="mailto:info@growwavemedia.com">info@growwavemedia.com</a></li>
+            <li><a href="mailto:growwavemedia@gmail.com">growwavemedia@gmail.com</a></li>
             <li><a href="tel:+917063363898">+91 70633 63898</a></li>
           </ul>
           <div className="footer-socials">
