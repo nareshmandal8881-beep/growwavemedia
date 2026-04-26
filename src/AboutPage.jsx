@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 import logo from './assets/logo.png';
 import spyImg from '/SPY06731.jpg.jpeg';
 import deepImg from '/DEEP3037.jpg.jpeg';
+import basantaImg from '/basanta_award.webp';
 
 const milestones = [
   { year: '2019', title: 'The Beginning', desc: 'Started the creator journey on YouTube — faced channel deletions but refused to give up.' },
@@ -27,6 +28,12 @@ const awards = [
     title: 'Bengal Business Excellence Award 2026',
     subtitle: 'Outstanding Entrepreneurial Achievement',
     color: '#818cf8',
+  },
+  {
+    img: basantaImg,
+    title: 'Basanta Samman Award 2026',
+    subtitle: 'Outstanding contributions to the creator economy and digital entrepreneurship in West Bengal.',
+    color: '#F72585',
   },
 ];
 
@@ -244,19 +251,7 @@ export default function AboutPage() {
             ))}
           </div>
 
-          {/* Third award text-only */}
-          <div className="about-award-text-card reveal">
-            <div className="about-award-text-icon">
-              <Award size={28} color="#F72585" />
-            </div>
-            <div>
-              <div className="about-award-badge" style={{ color: '#F72585', borderColor: '#F7258530', background: '#F7258510', marginBottom: '0.5rem' }}>
-                <Star size={12} fill="#F72585" /> Award 2026
-              </div>
-              <h3 className="about-award-text-title">Basanta Samman Award 2026</h3>
-              <p className="about-award-text-desc">Awarded for outstanding contributions to the creator economy and digital entrepreneurship in West Bengal.</p>
-            </div>
-          </div>
+          {/* Third award is now part of the awards grid above */}
         </div>
       </section>
 

@@ -43,8 +43,7 @@ const tickerItems = [
 ];
 
 const stats = [
-  { num: '1L+',   label: 'Influencers' },
-  { num: '1000+', label: 'Sign-ups in a day' },
+  { num: '1000',  label: 'Influencers' },
   { num: '5',     label: 'Years in market' },
   { num: '100+',  label: 'Projects completed' },
 ];
@@ -444,7 +443,7 @@ export default function App() {
       {/* CTA */}
       <section className="cta-section reveal">
         <h2>Does your startup fit any of these?</h2>
-        <a href="mailto:info@growwavemedia.com" className="btn-black">Start a conversation</a>
+        <a href="mailto:growwavemedia@gmail.com" className="btn-black">Start a conversation</a>
       </section>
 
       {/* FOOTER */}

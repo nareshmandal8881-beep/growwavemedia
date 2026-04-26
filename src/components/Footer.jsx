@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaYoutube, FaLinkedin, FaFacebook, FaInstagram } from 'react-icons/fa';
+import { FaYoutube, FaInstagram } from 'react-icons/fa';
 import logo from '../assets/logo.png';
 
 export default function Footer() {
@@ -28,9 +28,7 @@ export default function Footer() {
           </ul>
           <div className="footer-socials">
             <a href="https://www.instagram.com/grow_wave_media?igsh=MTdxMWhibTNlemc0ZQ==" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><FaInstagram size={16} /></a>
-            <a href="#" aria-label="YouTube"><FaYoutube size={16} /></a>
-            <a href="#" aria-label="LinkedIn"><FaLinkedin size={16} /></a>
-            <a href="#" aria-label="Facebook"><FaFacebook size={16} /></a>
+            <a href="https://www.youtube.com/@arghyadipnaskar.97" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><FaYoutube size={16} /></a>
           </div>
         </div>
 

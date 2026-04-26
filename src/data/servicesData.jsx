@@ -1,8 +1,9 @@
 import React from 'react';
+import { FaFacebook } from 'react-icons/fa';
 import { 
-  Users, Share2, Facebook, Search, 
-  Video, Camera, Palette, Layout,
-  Code, Store, Smartphone, Globe
+  Users, Share2, Search, 
+  Video, Camera, Palette,
+  Code, Smartphone, Globe
 } from 'lucide-react';
 
 export const servicesData = {
@@ -32,7 +33,7 @@ export const servicesData = {
   },
   'meta-ads': {
     title: 'Meta Ads',
-    icon: <Facebook size={40} />,
+    icon: <FaFacebook size={40} />,
     tagline: 'High-performance Facebook & Instagram Ads.',
     description: 'Scale your user acquisition with data-driven paid social campaigns. We optimize for conversions, not just clicks, ensuring your ad spend delivers real business results.',
     benefits: [
