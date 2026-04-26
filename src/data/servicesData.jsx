@@ -65,6 +65,12 @@ export const servicesData = {
       'Dynamic Motion Graphics',
       'Sound Design & Mixing',
       'Fast Turnaround Time'
+    ],
+    videos: [
+      { type: 'long',  label: 'Long Form',  embedId: '2EOWRUU1928' },
+      { type: 'long',  label: 'Long Form',  embedId: 'BGGLTYNP-k0' },
+      { type: 'short', label: 'Short Form', embedId: '8M8E3AUNYZs' },
+      { type: 'short', label: 'Short Form', embedId: '23b_eOf7FLY' },
     ]
   },
   'ugc-videos': {
@@ -77,6 +83,9 @@ export const servicesData = {
       'Scripting & Directing',
       'Raw & Edited Content Options',
       'High Engagement Rates'
+    ],
+    videos: [
+      { type: 'short', label: 'Short Form', embedId: 'WVQYsI9pe5k' },
     ]
   },
   'grafix-design': {

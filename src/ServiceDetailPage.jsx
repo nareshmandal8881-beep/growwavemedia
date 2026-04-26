@@ -158,6 +158,38 @@ export default function ServiceDetailPage() {
               </div>
             </div>
 
+            {/* Video Gallery (only for services with videos data) */}
+            {service.videos && (
+              <div className="sdp-card sdp-reveal">
+                <div className="sdp-card-label">Our Work</div>
+                <h2 className="sdp-card-h2">Watch Our Edits</h2>
+                <div className="sdp-video-grid">
+                  {service.videos.map((v, i) => (
+                    <div
+                      key={i}
+                      className={`sdp-video-item sdp-reveal ${v.type === 'short' ? 'sdp-video-short' : 'sdp-video-long'}`}
+                      style={{ transitionDelay: `${i * 0.1}s` }}
+                    >
+                      <div className="sdp-video-badge">{v.label}</div>
+                      <div className={`sdp-video-frame-wrap ${v.type === 'short' ? 'sdp-frame-short' : 'sdp-frame-long'}`}>
+                        <iframe
+                          src={
+                            v.type === 'short'
+                              ? `https://www.youtube.com/embed/${v.embedId}`
+                              : `https://www.youtube.com/embed/${v.embedId}`
+                          }
+                          title={`${v.label} video ${i + 1}`}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          style={{ border: 'none', width: '100%', height: '100%', borderRadius: '12px' }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Technologies (if any) */}
             {service.technologies && (
               <div className="sdp-card sdp-reveal">
