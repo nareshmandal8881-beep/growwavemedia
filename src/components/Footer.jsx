@@ -39,6 +39,7 @@ export default function Footer() {
             <li><Link to="/about">About Us</Link></li>
             <li><Link to="/#services">Services</Link></li>
             <li><a href="/#contact">Contacts</a></li>
+            <li><Link to="/compliance">Compliance</Link></li>
           </ul>
         </div>
 
@@ -60,6 +61,8 @@ export default function Footer() {
           <Link to="/privacy-policy">Privacy Policy</Link>
           <span className="footer-legal-sep">·</span>
           <Link to="/terms">Terms &amp; Conditions</Link>
+          <span className="footer-legal-sep">·</span>
+          <Link to="/compliance">Compliance</Link>
         </div>
       </div>
     </footer>

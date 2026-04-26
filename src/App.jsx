@@ -9,27 +9,27 @@ import { FaYoutube, FaLinkedin, FaFacebook } from 'react-icons/fa';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import logo from './assets/logo.png';
-import imgHarshGu  from './assets/Harsh Gujral.webp';
-import imgHarsh    from './assets/Harsh Beniwal.jpg';
-import imgElvish   from './assets/Elvish_Yadav.jpg';
-import imgPrerana  from './assets/Prerana Das.jpg';
-import imgPurav    from './assets/Purav Jha.avif';
-import imgRahul    from './assets/Rahul Dey.jpg';
-import imgSaikat   from './assets/Saikat Dey.jpg';
-import imgThugesh  from './assets/Thugesh.jpg';
-import imgBongGuy  from './assets/Your Bong Guy.jpg';
+import imgHarshGu from './assets/Harsh Gujral.webp';
+import imgHarsh from './assets/Harsh Beniwal.jpg';
+import imgElvish from './assets/Elvish_Yadav.jpg';
+import imgPrerana from './assets/Prerana Das.jpg';
+import imgPurav from './assets/Purav Jha.avif';
+import imgRahul from './assets/Rahul Dey.jpg';
+import imgSaikat from './assets/Saikat Dey.jpg';
+import imgThugesh from './assets/Thugesh.jpg';
+import imgBongGuy from './assets/Your Bong Guy.jpg';
 
 // Brand logos
-import brandAngelOne  from './assets/logo/Angel_One_Logo.svg.png';
-import brandDuolingo  from './assets/logo/Duolingo_logo.svg.png';
-import brandFlipkart  from './assets/logo/Flipkart_logo_(2026).svg';
+import brandAngelOne from './assets/logo/Angel_One_Logo.svg.png';
+import brandDuolingo from './assets/logo/Duolingo_logo.svg.png';
+import brandFlipkart from './assets/logo/Flipkart_logo_(2026).svg';
 import brandMamaearth from './assets/logo/Mamaearth-Logo-Vector.svg-.png';
-import brandNykaa     from './assets/logo/Nykaa_New_Logo.svg';
-import brandSlice     from './assets/logo/Slice_Small_Finance_Bank.png';
-import brandHimalaya  from './assets/logo/The_Himalaya_Drug_Company_logo.svg.png';
-import brandImages    from './assets/logo/images.png';
-import brandJar       from './assets/logo/jar-app-logo-png_seeklogo-543025.png';
-import brandPocket    from './assets/logo/pocketoption.svg';
+import brandNykaa from './assets/logo/Nykaa_New_Logo.svg';
+import brandSlice from './assets/logo/Slice_Small_Finance_Bank.png';
+import brandHimalaya from './assets/logo/The_Himalaya_Drug_Company_logo.svg.png';
+import brandImages from './assets/logo/images.png';
+import brandJar from './assets/logo/jar-app-logo-png_seeklogo-543025.png';
+import brandPocket from './assets/logo/pocketoption.svg';
 
 const tickerItems = [
   'Social Media Marketing',
@@ -43,50 +43,50 @@ const tickerItems = [
 ];
 
 const stats = [
-  { num: '1000',  label: 'Influencers' },
-  { num: '5',     label: 'Years in market' },
-  { num: '100+',  label: 'Projects completed' },
+  { num: '1000', label: 'Influencers' },
+  { num: '5', label: 'Years in market' },
+  { num: '100+', label: 'Projects completed' },
 ];
 
 const features = [
-  { title: 'Proven Track Record',    desc: '100+ successful campaigns across IT verticals.' },
-  { title: 'IT-Sector Expertise',    desc: 'We speak the language of founders and tech teams.' },
+  { title: 'Proven Track Record', desc: '100+ successful campaigns across IT verticals.' },
+  { title: 'IT-Sector Expertise', desc: 'We speak the language of founders and tech teams.' },
   { title: '1L+ Influencer Network', desc: 'Ready-to-activate creators in your niche.' },
-  { title: 'Data-Driven Growth',     desc: 'Every decision backed by numbers, not guesswork.' },
+  { title: 'Data-Driven Growth', desc: 'Every decision backed by numbers, not guesswork.' },
 ];
 
 const services = [
-  { id: 'influencer-marketing',    icon: <Users size={22}/>,      title: 'Influencer Marketing',    desc: 'Strategic partnerships with top creators to amplify your brands reach.' },
-  { id: 'social-media-management', icon: <Share2 size={22}/>,     title: 'Social Media Management', desc: 'Expert management of your presence across all major social platforms.' },
-  { id: 'meta-ads',                icon: <FaFacebook size={22}/>, title: 'Meta Ads',                desc: 'High-converting Facebook and Instagram ad campaigns targeted with precision.' },
-  { id: 'google-ads',              icon: <Search size={22}/>,     title: 'Google Ads',              desc: 'Dominate search results and drive intent-based traffic to your business.' },
-  { id: 'video-editing',           icon: <Video size={22}/>,      title: 'Video Editing Service',   desc: 'Professional editing that keeps your audience hooked from start to finish.' },
-  { id: 'ugc-videos',              icon: <Camera size={22}/>,     title: 'UGC Videos',              desc: 'Authentic content from real people that builds instant trust and engagement.' },
-  { id: 'grafix-design',           icon: <Palette size={22}/>,    title: 'Grafix Design',           desc: 'Stunning visual identities and assets that make your brand stand out.' },
-  { id: 'website-development',     icon: <Code size={22}/>,       title: 'Website Development',     desc: 'Modern, high-performance web solutions built with React, WordPress, and Flutter.' },
+  { id: 'influencer-marketing', icon: <Users size={22} />, title: 'Influencer Marketing', desc: 'Strategic partnerships with top creators to amplify your brands reach.' },
+  { id: 'social-media-management', icon: <Share2 size={22} />, title: 'Social Media Management', desc: 'Expert management of your presence across all major social platforms.' },
+  { id: 'meta-ads', icon: <FaFacebook size={22} />, title: 'Meta Ads', desc: 'High-converting Facebook and Instagram ad campaigns targeted with precision.' },
+  { id: 'google-ads', icon: <Search size={22} />, title: 'Google Ads', desc: 'Dominate search results and drive intent-based traffic to your business.' },
+  { id: 'video-editing', icon: <Video size={22} />, title: 'Video Editing Service', desc: 'Professional editing that keeps your audience hooked from start to finish.' },
+  { id: 'ugc-videos', icon: <Camera size={22} />, title: 'UGC Videos', desc: 'Authentic content from real people that builds instant trust and engagement.' },
+  { id: 'grafix-design', icon: <Palette size={22} />, title: 'Grafix Design', desc: 'Stunning visual identities and assets that make your brand stand out.' },
+  { id: 'website-development', icon: <Code size={22} />, title: 'Website Development', desc: 'Modern, high-performance web solutions built with React, WordPress, and Flutter.' },
 ];
 
 const clients = [
-  { name: 'Harsh Beniwal',  img: imgHarsh,   followers: '8M+',  platform: 'YouTube'   },
-  { name: 'Elvish Yadav',   img: imgElvish,  followers: '20M+', platform: 'YouTube'   },
-  { name: 'Prerana Das',    img: imgPrerana, followers: '2M+',  platform: 'Instagram' },
-  { name: 'Purav Jha',      img: imgPurav,   followers: '5M+',  platform: 'YouTube'   },
-  { name: 'Rahul Dey',      img: imgRahul,   followers: '1M+',  platform: 'Instagram' },
-  { name: 'Saikat Dey',     img: imgSaikat,  followers: '1M+',  platform: 'YouTube'   },
-  { name: 'Thugesh',        img: imgThugesh, followers: '3M+',  platform: 'YouTube'   },
-  { name: 'Your Bong Guy',  img: imgBongGuy, followers: '2M+',  platform: 'YouTube'   },
+  { name: 'Harsh Beniwal', img: imgHarsh, followers: '8M+', platform: 'YouTube' },
+  { name: 'Elvish Yadav', img: imgElvish, followers: '20M+', platform: 'YouTube' },
+  { name: 'Prerana Das', img: imgPrerana, followers: '2M+', platform: 'Instagram' },
+  { name: 'Purav Jha', img: imgPurav, followers: '5M+', platform: 'YouTube' },
+  { name: 'Rahul Dey', img: imgRahul, followers: '1M+', platform: 'Instagram' },
+  { name: 'Saikat Dey', img: imgSaikat, followers: '1M+', platform: 'YouTube' },
+  { name: 'Thugesh', img: imgThugesh, followers: '3M+', platform: 'YouTube' },
+  { name: 'Your Bong Guy', img: imgBongGuy, followers: '2M+', platform: 'YouTube' },
 ];
 const brands = [
-  { name: 'Angel One',  img: brandAngelOne  },
-  { name: 'Duolingo',   img: brandDuolingo  },
-  { name: 'Flipkart',   img: brandFlipkart  },
-  { name: 'Mamaearth',  img: brandMamaearth },
-  { name: 'Nykaa',      img: brandNykaa     },
-  { name: 'Slice Bank', img: brandSlice     },
-  { name: 'Himalaya',   img: brandHimalaya  },
-  { name: 'Jar App',    img: brandJar       },
+  { name: 'Angel One', img: brandAngelOne },
+  { name: 'Duolingo', img: brandDuolingo },
+  { name: 'Flipkart', img: brandFlipkart },
+  { name: 'Mamaearth', img: brandMamaearth },
+  { name: 'Nykaa', img: brandNykaa },
+  { name: 'Slice Bank', img: brandSlice },
+  { name: 'Himalaya', img: brandHimalaya },
+  { name: 'Jar App', img: brandJar },
   { name: 'Pocket Option', img: brandPocket },
-  { name: 'D2C Brand',  img: brandImages    },
+  { name: 'D2C Brand', img: brandImages },
 ];
 
 const Counter = ({ value, duration = 2000 }) => {
@@ -213,7 +213,7 @@ export default function App() {
               build audiences, generate leads, and dominate their markets fast.
             </p>
             <div className="hero-actions">
-              <a href="#contact"  className="btn-solid">Book consultation</a>
+              <a href="#contact" className="btn-solid">Book consultation</a>
               <a href="#services" className="btn-line">See our services</a>
             </div>
           </div>
@@ -370,7 +370,7 @@ export default function App() {
                   <label htmlFor="name">Full Name</label>
                   <input
                     id="name" name="name" type="text"
-                    placeholder="Arghyadip Naskar"
+                    placeholder="Enter Your Name"
                     value={formData.name} onChange={handleChange} required
                   />
                 </div>
@@ -421,7 +421,7 @@ export default function App() {
                   style={{ gap: '0.6rem', display: 'inline-flex', alignItems: 'center' }}
                 >
                   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" />
                   </svg> Send on WhatsApp
                 </button>
               </div>

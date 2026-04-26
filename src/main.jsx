@@ -7,6 +7,7 @@ import AboutPage from './AboutPage.jsx'
 import ServiceDetailPage from './ServiceDetailPage.jsx'
 import PrivacyPolicyPage from './PrivacyPolicyPage.jsx'
 import TermsPage from './TermsPage.jsx'
+import CompliancePage from './CompliancePage.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/services/:serviceId" element={<ServiceDetailPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/compliance" element={<CompliancePage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

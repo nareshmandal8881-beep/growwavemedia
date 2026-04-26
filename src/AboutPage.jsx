@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Award, Users, TrendingUp, Star, Calendar, Globe } from 'lucide-react';
+import { Award, Users, TrendingUp, Star, Calendar, Globe, CheckSquare, FileText, ExternalLink, Shield } from 'lucide-react';
 import { FaYoutube, FaLinkedin, FaFacebook } from 'react-icons/fa';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -252,6 +252,115 @@ export default function AboutPage() {
           </div>
 
           {/* Third award is now part of the awards grid above */}
+        </div>
+      </section>
+
+      {/* CERTIFICATIONS & REGISTRATIONS */}
+      <section style={{ background: '#111218', padding: '6rem 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="container">
+          <div className="about-section-head reveal">
+            <div className="eyebrow">Verified &amp; Registered</div>
+            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', fontWeight: 900, letterSpacing: '-1.5px', color: '#fff', marginTop: '1rem', maxWidth: '600px', lineHeight: 1.1 }}>
+              Official Certifications
+            </h2>
+            <p style={{ fontSize: '0.92rem', color: 'rgba(255,255,255,0.45)', marginTop: '0.75rem', maxWidth: '520px', lineHeight: 1.7 }}>
+              Grow Wave Media is a government-recognised and registered business entity. Our credentials are fully verifiable.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '3rem' }}>
+
+            {/* Udyam Certificate */}
+            <div className="reveal" style={{ background: '#0e0e12', border: '1px solid rgba(56,207,255,0.2)', borderRadius: '4px', padding: '2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', transition: 'border-color 0.25s, transform 0.25s, box-shadow 0.25s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(56,207,255,0.5)'; e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 16px 40px rgba(56,207,255,0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(56,207,255,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.25rem' }}>
+                <div style={{ width: '52px', height: '52px', borderRadius: '12px', background: 'rgba(56,207,255,0.08)', border: '1px solid rgba(56,207,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)', flexShrink: 0 }}>
+                  <CheckSquare size={26} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '0.4rem' }}>Govt. of India · MSME</div>
+                  <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px', color: '#fff', marginBottom: '0.3rem' }}>Udyam Registration Certificate</h3>
+                  <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.65 }}>Registered under the Ministry of Micro, Small &amp; Medium Enterprises, Government of India.</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '0.25rem' }}>Category</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>Micro Enterprise</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '0.25rem' }}>Type</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>Services</div>
+                </div>
+              </div>
+              <a
+                href="/udyam-certificate.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', background: 'rgba(56,207,255,0.1)', border: '1px solid rgba(56,207,255,0.35)', color: 'var(--accent)', fontSize: '0.78rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', textDecoration: 'none', borderRadius: '2px', transition: 'all 0.2s', alignSelf: 'flex-start' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(56,207,255,0.18)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(56,207,255,0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <ExternalLink size={14} /> View Certificate
+              </a>
+            </div>
+
+            {/* Trade License */}
+            <div className="reveal" style={{ background: '#0e0e12', border: '1px solid rgba(129,140,248,0.2)', borderRadius: '4px', padding: '2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', transition: 'border-color 0.25s, transform 0.25s, box-shadow 0.25s', transitionDelay: '0.1s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(129,140,248,0.5)'; e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 16px 40px rgba(129,140,248,0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(129,140,248,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.25rem' }}>
+                <div style={{ width: '52px', height: '52px', borderRadius: '12px', background: 'rgba(129,140,248,0.08)', border: '1px solid rgba(129,140,248,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8', flexShrink: 0 }}>
+                  <FileText size={26} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: '#818cf8', marginBottom: '0.4rem' }}>Municipal Corporation · West Bengal</div>
+                  <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px', color: '#fff', marginBottom: '0.3rem' }}>Trade License</h3>
+                  <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.65 }}>Officially licensed to operate as a digital marketing and media services business in West Bengal.</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '0.25rem' }}>Issued By</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>Kolkata, WB</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '0.25rem' }}>Status</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#4ade80' }}>Active ✓</div>
+                </div>
+              </div>
+              <a
+                href="/trade-license.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', background: 'rgba(129,140,248,0.1)', border: '1px solid rgba(129,140,248,0.35)', color: '#818cf8', fontSize: '0.78rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', textDecoration: 'none', borderRadius: '2px', transition: 'all 0.2s', alignSelf: 'flex-start' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(129,140,248,0.18)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(129,140,248,0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <ExternalLink size={14} /> View License
+              </a>
+            </div>
+
+          </div>
+
+          {/* Trust badges row */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '2.5rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '100px' }}>
+              <Shield size={14} color="#4ade80" />
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#4ade80', letterSpacing: '0.5px' }}>MSME Registered</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '100px' }}>
+              <Shield size={14} color="#4ade80" />
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#4ade80', letterSpacing: '0.5px' }}>Trade Licensed</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '100px' }}>
+              <Shield size={14} color="#4ade80" />
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#4ade80', letterSpacing: '0.5px' }}>Govt. Verified Business</span>
+            </div>
+          </div>
         </div>
       </section>
 
