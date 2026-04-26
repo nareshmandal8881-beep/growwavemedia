@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Menu, X, Play, CheckCircle2, ChevronRight,
   TrendingUp, Users, Target, Zap, Rocket,
-  Search, Layers, Globe
+  Search, Layers, Globe, Share2, Video, Camera, Palette, Code
 } from 'lucide-react';
 import { FaYoutube, FaLinkedin, FaFacebook } from 'react-icons/fa';
 import Navbar from './components/Navbar';
@@ -57,10 +57,14 @@ const features = [
 ];
 
 const services = [
-  { icon: <Search size={22}/>,     title: 'Google Search Advertising', desc: 'Text ads on Google Search, that are displayed when a user types in a specific keyword, related to your product' },
-  { icon: <Layers size={22}/>,     title: 'Display Advertising',       desc: 'Visual ads, that are displayed on millions of websites and mobile apps, which are part of Google Display Network' },
-  { icon: <FaFacebook size={22}/>, title: 'Facebook Advertising',      desc: 'Different ad formats, that are displayed on Facebook to targeted demographics and interests.' },
-  { icon: <Globe size={22}/>,      title: 'Website Development',       desc: 'Beautiful websites with high conversion rates built to engage your specific target audience.' },
+  { id: 'influencer-marketing',    icon: <Users size={22}/>,      title: 'Influencer Marketing',    desc: 'Strategic partnerships with top creators to amplify your brands reach.' },
+  { id: 'social-media-management', icon: <Share2 size={22}/>,     title: 'Social Media Management', desc: 'Expert management of your presence across all major social platforms.' },
+  { id: 'meta-ads',                icon: <FaFacebook size={22}/>, title: 'Meta Ads',                desc: 'High-converting Facebook and Instagram ad campaigns targeted with precision.' },
+  { id: 'google-ads',              icon: <Search size={22}/>,     title: 'Google Ads',              desc: 'Dominate search results and drive intent-based traffic to your business.' },
+  { id: 'video-editing',           icon: <Video size={22}/>,      title: 'Video Editing Service',   desc: 'Professional editing that keeps your audience hooked from start to finish.' },
+  { id: 'ugc-videos',              icon: <Camera size={22}/>,     title: 'UGC Videos',              desc: 'Authentic content from real people that builds instant trust and engagement.' },
+  { id: 'grafix-design',           icon: <Palette size={22}/>,    title: 'Grafix Design',           desc: 'Stunning visual identities and assets that make your brand stand out.' },
+  { id: 'website-development',     icon: <Code size={22}/>,       title: 'Website Development',     desc: 'Modern, high-performance web solutions built with React, WordPress, and Flutter.' },
 ];
 
 const clients = [
@@ -319,16 +323,16 @@ export default function App() {
 
           <div className="svc-grid">
             {services.map((s, i) => (
-              <div className="svc-card reveal" key={i} style={{ transitionDelay: `${i * 0.1}s` }}>
+              <Link to={`/services/${s.id}`} className="svc-card reveal" key={i} style={{ transitionDelay: `${i * 0.1}s`, textDecoration: 'none' }}>
                 <div className="svc-card-header">
                   <div className="svc-icon">{s.icon}</div>
                   <h3>{s.title}</h3>
                 </div>
                 <p className="svc-card-desc">{s.desc}</p>
                 <div className="svc-card-action">
-                  <a href="#contact" className="btn-outline">Learn more</a>
+                  <span className="btn-outline">View Details</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
