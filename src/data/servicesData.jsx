@@ -1,3 +1,4 @@
+import React from 'react';
 import { 
   Users, Share2, Facebook, Search, 
   Video, Camera, Palette, Layout,

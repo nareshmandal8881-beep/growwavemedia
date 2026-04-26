@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, ChevronRight } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import { servicesData } from './data/servicesData';
+import { servicesData } from './data/servicesData.jsx';
 
 export default function ServiceDetailPage() {
   const { serviceId } = useParams();
