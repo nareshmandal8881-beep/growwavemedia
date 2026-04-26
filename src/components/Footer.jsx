@@ -56,7 +56,11 @@ export default function Footer() {
 
       <div className="footer-bottom container">
         <span>&#169; {new Date().getFullYear()} Grow Wave Media. All rights reserved.</span>
-        <span>Built for IT Startups. Built to grow.</span>
+        <div className="footer-legal-links">
+          <Link to="/privacy-policy">Privacy Policy</Link>
+          <span className="footer-legal-sep">·</span>
+          <Link to="/terms">Terms &amp; Conditions</Link>
+        </div>
       </div>
     </footer>
   );

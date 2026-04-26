@@ -1125,6 +1125,27 @@ body {
   border-top: 1px solid var(--border);
 }
 
+.footer-legal-links {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.footer-legal-links a {
+  font-size: 0.75rem;
+  color: var(--dim);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.footer-legal-links a:hover { color: var(--accent); }
+
+.footer-legal-sep {
+  color: var(--dim);
+  opacity: 0.4;
+}
+
+
 /* ── Reveal ─────────────────────────────────────────────────── */
 .reveal {
   opacity: 0;
@@ -1907,6 +1928,86 @@ body {
 @media (max-width: 480px) {
   .sdp-img-gallery { grid-template-columns: 1fr; }
 }
+
+/* ── Hover overlay on gallery items ──────────────────────── */
+.sdp-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s;
+  border-radius: 12px;
+}
+.sdp-img-item:hover .sdp-img-overlay { opacity: 1; }
+
+.sdp-img-zoom {
+  font-size: 2rem;
+  color: #fff;
+  line-height: 1;
+  transform: scale(0.8);
+  transition: transform 0.25s;
+}
+.sdp-img-item:hover .sdp-img-zoom { transform: scale(1); }
+
+/* ── Lightbox ─────────────────────────────────────────────── */
+.sdp-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: lb-fade 0.2s ease;
+  cursor: zoom-out;
+}
+
+@keyframes lb-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.sdp-lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.8);
+  cursor: default;
+  animation: lb-scale 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+
+@keyframes lb-scale {
+  from { transform: scale(0.88); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.sdp-lightbox-close {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  z-index: 10000;
+}
+.sdp-lightbox-close:hover {
+  background: rgba(255,255,255,0.25);
+  transform: scale(1.1);
+}
+
 
 
 

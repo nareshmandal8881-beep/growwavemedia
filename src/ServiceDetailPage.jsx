@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, ChevronRight, ArrowRight, Plus, Minus, MessageCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronRight, ArrowRight, Plus, Minus, MessageCircle, X } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { servicesData } from './data/servicesData.jsx';
@@ -23,6 +23,14 @@ function FaqItem({ q, a, index }) {
 export default function ServiceDetailPage() {
   const { serviceId } = useParams();
   const service = servicesData[serviceId];
+  const [lightbox, setLightbox] = useState(null); // null or { src, alt }
+
+  // Close lightbox on Escape key
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') setLightbox(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -201,11 +209,28 @@ export default function ServiceDetailPage() {
                       key={i}
                       className="sdp-img-item sdp-reveal"
                       style={{ transitionDelay: `${i * 0.1}s` }}
+                      onClick={() => setLightbox(img)}
                     >
                       <img src={img.src} alt={img.alt} className="sdp-gallery-img" />
+                      <div className="sdp-img-overlay"><span className="sdp-img-zoom">⤢</span></div>
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Lightbox Modal */}
+            {lightbox && (
+              <div className="sdp-lightbox" onClick={() => setLightbox(null)}>
+                <button className="sdp-lightbox-close" onClick={() => setLightbox(null)}>
+                  <X size={24} />
+                </button>
+                <img
+                  src={lightbox.src}
+                  alt={lightbox.alt}
+                  className="sdp-lightbox-img"
+                  onClick={(e) => e.stopPropagation()}
+                />
               </div>
             )}
 
