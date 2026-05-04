@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import logo from '../assets/logo.png';
 
-export default function Navbar() {
+export default function Navbar({ onEnrollClick }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -21,9 +21,13 @@ export default function Navbar() {
         </div>
 
         <div className="nav-actions">
-          <a href="/#contact" className="nav-cta desktop-only">
-            Book a free call
-          </a>
+          <button 
+            onClick={onEnrollClick} 
+            className="nav-cta desktop-only"
+            style={{ border: 'none', cursor: 'pointer' }}
+          >
+            Enroll Now
+          </button>
           
           {/* Mobile Menu Toggle */}
           <button 
@@ -42,9 +46,16 @@ export default function Navbar() {
           <Link to="/about" className="mobile-link" onClick={() => setIsOpen(false)}>About Us</Link>
           <a href="/#services" className="mobile-link" onClick={() => setIsOpen(false)}>Services</a>
           <a href="/#contact" className="mobile-link" onClick={() => setIsOpen(false)}>Contact</a>
-          <a href="/#contact" className="mobile-cta" onClick={() => setIsOpen(false)}>
-            Book a free call
-          </a>
+          <button 
+            onClick={() => {
+              setIsOpen(false);
+              onEnrollClick();
+            }} 
+            className="mobile-cta"
+            style={{ border: 'none', cursor: 'pointer', width: '100%' }}
+          >
+            Enroll Now
+          </button>
         </div>
       </div>
     </nav>

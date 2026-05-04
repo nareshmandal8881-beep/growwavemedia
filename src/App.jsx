@@ -8,6 +8,7 @@ import {
 import { FaYoutube, FaLinkedin, FaFacebook } from 'react-icons/fa';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import EnrollmentModal from './components/EnrollmentModal';
 import logo from './assets/logo.png';
 import imgHarshGu from './assets/Harsh Gujral.webp';
 import imgHarsh from './assets/Harsh Beniwal.jpg';
@@ -159,7 +160,9 @@ export default function App() {
     setFormData({ name: '', email: '', phone: '', service: '', message: '' });
   };
 
-  useEffect(() => {
+    const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
+
+    useEffect(() => {
     // Scroll reveal
     const io = new IntersectionObserver(
       (entries) => entries.forEach((e) => {
@@ -179,7 +182,7 @@ export default function App() {
   return (
     <>
       {/* NAVBAR */}
-      <Navbar />
+      <Navbar onEnrollClick={() => setIsEnrollModalOpen(true)} />
 
       {/* HERO */}
       <section className="hero">
@@ -213,7 +216,9 @@ export default function App() {
               build audiences, generate leads, and dominate their markets fast.
             </p>
             <div className="hero-actions">
-              <a href="#contact" className="btn-solid">Book consultation</a>
+              <button onClick={() => setIsEnrollModalOpen(true)} className="btn-solid" style={{ border: 'none', cursor: 'pointer' }}>
+                Enroll Now
+              </button>
               <a href="#services" className="btn-line">See our services</a>
             </div>
           </div>
@@ -448,6 +453,12 @@ export default function App() {
 
       {/* FOOTER */}
       <Footer />
+
+      {/* Enrollment Modal */}
+      <EnrollmentModal 
+        isOpen={isEnrollModalOpen} 
+        onClose={() => setIsEnrollModalOpen(false)} 
+      />
     </>
   );
 }
