@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, ChevronRight, ArrowRight, Plus, Minus, MessageCircle, X } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { servicesData } from './data/servicesData.jsx';
@@ -90,6 +91,11 @@ export default function ServiceDetailPage() {
 
   return (
     <div className="sdp-page">
+      <Helmet>
+        <title>{service.title} | Grow Wave Media</title>
+        <meta name="description" content={service.tagline || `Expert ${service.title} services for IT startups looking to scale their digital presence.`} />
+        <link rel="canonical" href={`https://growwavemedia.com/services/${serviceId}`} />
+      </Helmet>
       <Navbar />
 
       {/* ── HERO ──────────────────────────────────────────────── */}

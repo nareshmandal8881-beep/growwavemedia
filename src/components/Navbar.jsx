@@ -10,7 +10,7 @@ export default function Navbar({ onEnrollClick }) {
     <nav className="navbar" id="top">
       <div className="container nav-inner">
         <Link to="/" onClick={() => setIsOpen(false)}>
-          <img src={logo} alt="Grow Wave Media" className="nav-logo" />
+          <img src={logo} alt="Grow Wave Media - Digital Marketing Agency for IT Startups" className="nav-logo" />
         </Link>
         
         {/* Desktop Links */}

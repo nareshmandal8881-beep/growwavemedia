@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://growwavemedia.com/sitemap.xml

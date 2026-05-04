@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Award, Users, TrendingUp, Star, Calendar, Globe, CheckSquare, FileText, ExternalLink, Shield } from 'lucide-react';
 import { FaYoutube, FaLinkedin, FaFacebook } from 'react-icons/fa';
+import { Helmet } from 'react-helmet-async';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import logo from './assets/logo.png';
@@ -10,6 +11,7 @@ import deepImg from '/DEEP3037.jpg.jpeg';
 import basantaImg from '/basanta_award.webp';
 
 const milestones = [
+// ... (rest of the code)
   { year: '2019', title: 'The Beginning', desc: 'Started the creator journey on YouTube — faced channel deletions but refused to give up.' },
   { year: '2021', title: 'Brand Deal Pivot', desc: 'Transitioned to brand partnerships where creative prowess led to exponential growth, surpassing platform monetization.' },
   { year: '2023', title: 'Network Builder', desc: 'Identified the market gap and began strategically connecting 50,000+ Indian creators with 100+ brands.' },
@@ -105,6 +107,11 @@ export default function AboutPage() {
 
   return (
     <>
+      <Helmet>
+        <title>About Arghyadip Naskar | Founder of Grow Wave Media</title>
+        <meta name="description" content="Discover the journey of Arghyadip Naskar, from content creator to founding Grow Wave Media, a leading digital marketing agency for IT startups." />
+        <link rel="canonical" href="https://growwavemedia.com/about" />
+      </Helmet>
       {/* NAVBAR */}
       <Navbar />
 

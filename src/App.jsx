@@ -6,6 +6,7 @@ import {
   Search, Layers, Globe, Share2, Video, Camera, Palette, Code
 } from 'lucide-react';
 import { FaYoutube, FaLinkedin, FaFacebook } from 'react-icons/fa';
+import { Helmet } from 'react-helmet-async';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import EnrollmentModal from './components/EnrollmentModal';
@@ -181,6 +182,11 @@ export default function App() {
 
   return (
     <>
+      <Helmet>
+        <title>Grow Wave Media | Top Digital Marketing Agency for IT Startup Growth</title>
+        <meta name="description" content="Grow Wave Media helps IT startups scale through expert influencer marketing, social media management, and data-driven performance ads. Book a free consultation today." />
+        <link rel="canonical" href="https://growwavemedia.com/" />
+      </Helmet>
       {/* NAVBAR */}
       <Navbar onEnrollClick={() => setIsEnrollModalOpen(true)} />
 
@@ -240,11 +246,11 @@ export default function App() {
       {/* BRAND MARQUEE */}
       <div className="brand-strip">
         <div className="brand-marquee">
-          {[...brands, ...brands].map((b, i) => (
-            <div className="brand-logo-item" key={i}>
-              <img src={b.img} alt={b.name} className="brand-logo-img" />
-            </div>
-          ))}
+            {[...brands, ...brands].map((b, i) => (
+              <div className="brand-logo-item" key={i}>
+                <img src={b.img} alt={`${b.name} logo - Partner of Grow Wave Media`} className="brand-logo-img" />
+              </div>
+            ))}
         </div>
       </div>
 
@@ -305,7 +311,7 @@ export default function App() {
             {clients.map((c, i) => (
               <div className="client-card reveal" key={i} style={{ transitionDelay: `${i * 0.07}s` }}>
                 <div className="client-img-wrap">
-                  <img src={c.img} alt={c.name} className="client-img" />
+                  <img src={c.img} alt={`${c.name} - Influencer associated with Grow Wave Media`} className="client-img" />
                 </div>
                 <div className="client-info">
                   <span className="client-name">{c.name}</span>
