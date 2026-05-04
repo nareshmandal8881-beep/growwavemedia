@@ -58,6 +58,7 @@ const features = [
 ];
 
 const services = [
+  { id: 'website-development', icon: <Code size={22} />, title: 'Website Development', desc: 'Modern, high-performance web solutions built with React, WordPress, and Flutter.', featured: true },
   { id: 'influencer-marketing', icon: <Users size={22} />, title: 'Influencer Marketing', desc: 'Strategic partnerships with top creators to amplify your brands reach.' },
   { id: 'social-media-management', icon: <Share2 size={22} />, title: 'Social Media Management', desc: 'Expert management of your presence across all major social platforms.' },
   { id: 'meta-ads', icon: <FaFacebook size={22} />, title: 'Meta Ads', desc: 'High-converting Facebook and Instagram ad campaigns targeted with precision.' },
@@ -65,7 +66,6 @@ const services = [
   { id: 'video-editing', icon: <Video size={22} />, title: 'Video Editing Service', desc: 'Professional editing that keeps your audience hooked from start to finish.' },
   { id: 'ugc-videos', icon: <Camera size={22} />, title: 'UGC Videos', desc: 'Authentic content from real people that builds instant trust and engagement.' },
   { id: 'grafix-design', icon: <Palette size={22} />, title: 'Grafix Design', desc: 'Stunning visual identities and assets that make your brand stand out.' },
-  { id: 'website-development', icon: <Code size={22} />, title: 'Website Development', desc: 'Modern, high-performance web solutions built with React, WordPress, and Flutter.' },
 ];
 
 const clients = [
@@ -183,8 +183,8 @@ export default function App() {
   return (
     <>
       <Helmet>
-        <title>Grow Wave Media | Top Digital Marketing Agency for IT Startup Growth</title>
-        <meta name="description" content="Grow Wave Media helps IT startups scale through expert influencer marketing, social media management, and data-driven performance ads. Book a free consultation today." />
+        <title>Grow Wave Media | Expert Website Development & Digital Marketing for Startups</title>
+        <meta name="description" content="Grow Wave Media specializes in high-performance Website Development (React, Flutter), Influencer Marketing, and Social Media strategies to scale IT startups worldwide." />
         <link rel="canonical" href="https://growwavemedia.com/" />
       </Helmet>
       {/* NAVBAR */}
@@ -210,10 +210,11 @@ export default function App() {
           <div className="hero-left">
             <div className="eyebrow">Digital Marketing Agency</div>
             <h1 className="hero-h1 hero-animate">
-              We Scale{' '}
-              <span className="outline-word">IT Startups</span>
+              <span className="accent-word">Website Development</span>
               <br />
-              <span className="accent-word">Worldwide.</span>
+              & Digital Growth for 
+              <br />
+              <span className="outline-word">IT Startups.</span>
             </h1>
           </div>
           <div className="hero-meta hero-animate" style={{ animationDelay: '0.2s' }}>
@@ -333,7 +334,8 @@ export default function App() {
 
           <div className="svc-grid">
             {services.map((s, i) => (
-              <Link to={`/services/${s.id}`} className="svc-card reveal" key={i} style={{ transitionDelay: `${i * 0.1}s`, textDecoration: 'none' }}>
+              <Link to={`/services/${s.id}`} className={`svc-card reveal ${s.featured ? 'svc-featured' : ''}`} key={i} style={{ transitionDelay: `${i * 0.1}s`, textDecoration: 'none', position: 'relative' }}>
+                {s.featured && <div className="svc-badge">Most Popular</div>}
                 <div className="svc-card-header">
                   <div className="svc-icon">{s.icon}</div>
                   <h3>{s.title}</h3>

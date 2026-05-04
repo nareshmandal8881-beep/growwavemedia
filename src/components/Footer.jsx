@@ -56,7 +56,12 @@ export default function Footer() {
       </div>
 
       <div className="footer-bottom container">
-        <span>&#169; {new Date().getFullYear()} Grow Wave Media. All rights reserved.</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <span>&#169; {new Date().getFullYear()} Grow Wave Media. All rights reserved.</span>
+          <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
+            Developed by <a href="https://github.com/nareshmandal8881-beep" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: '600' }}>Naresh Mandal</a> | React & Flutter Specialist
+          </span>
+        </div>
         <div className="footer-legal-links">
           <Link to="/privacy-policy">Privacy Policy</Link>
           <span className="footer-legal-sep">·</span>
