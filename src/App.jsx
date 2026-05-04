@@ -210,11 +210,10 @@ export default function App() {
           <div className="hero-left">
             <div className="eyebrow">Digital Marketing Agency</div>
             <h1 className="hero-h1 hero-animate">
-              <span className="accent-word">Website Development</span>
+              We Scale{' '}
+              <span className="outline-word">IT Startups</span>
               <br />
-              & Digital Growth for 
-              <br />
-              <span className="outline-word">IT Startups.</span>
+              <span className="accent-word">Worldwide.</span>
             </h1>
           </div>
           <div className="hero-meta hero-animate" style={{ animationDelay: '0.2s' }}>
