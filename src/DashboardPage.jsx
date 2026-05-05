@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, Briefcase, MessageSquare, LogOut, 
-  Search, RefreshCw, ChevronRight, Filter 
+  Search, RefreshCw, ChevronRight, Filter, Trash2 
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -40,6 +40,33 @@ export default function DashboardPage() {
   const handleLogout = () => {
     localStorage.removeItem('waveAdminToken');
     navigate('/wavelogin');
+  };
+
+  const handleDelete = async (email) => {
+    if (!window.confirm(`Are you sure you want to delete lead with email: ${email}?`)) return;
+    
+    setLoading(true);
+    try {
+      const res = await fetch(`https://sheetdb.io/api/v1/myhiyvk7r2sy9/Email/${email}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      const result = await res.json();
+      if (result.deleted > 0) {
+        alert('Lead deleted successfully!');
+        fetchData();
+      } else {
+        alert('Error deleting lead or lead not found.');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('Failed to delete lead.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredData = data.filter(row => {
@@ -179,10 +206,19 @@ export default function DashboardPage() {
                       <td className="col-msg">
                         <div className="msg-full">{row.Message}</div>
                       </td>
-                      <td>
-                        <button className="row-view-btn" onClick={() => setSelectedRow(row)}>
-                          <Search size={18} />
-                        </button>
+                      <td className="col-actions-btns">
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button className="row-view-btn" onClick={() => setSelectedRow(row)} title="View Details">
+                            <Search size={18} />
+                          </button>
+                          <button 
+                            className="row-delete-btn" 
+                            onClick={() => handleDelete(row.Email)}
+                            title="Delete Lead"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
