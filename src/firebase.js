@@ -1,10 +1,9 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAfs2ax3iOCKef1T9ZHBVSsgOpC7mdYeXc",
   authDomain: "growwavemedia-7ff8a.firebaseapp.com",
@@ -16,9 +15,16 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
+console.log("Initializing Firebase with Project ID:", firebaseConfig.projectId);
 const app = initializeApp(firebaseConfig);
-const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-export { db, analytics };
+// For debugging in browser console
+if (typeof window !== 'undefined') {
+  window.firebase_app = app;
+  window.firestore_db = db;
+}
+
+export { db, auth };
 export default app;

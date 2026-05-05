@@ -1,20 +1,30 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, ShieldAlert } from 'lucide-react';
+import { auth } from './firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email === 'growwavemedia@gmail.com' && password === 'Admin@wave$123') {
+    setLoading(true);
+    setError('');
+    
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       localStorage.setItem('waveAdminToken', 'authenticated_success');
       navigate('/wave-dashboard');
-    } else {
-      setError('Invalid credentials. Please check your email and password.');
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Invalid credentials. Please check your email and password or ensure the user is created in Firebase Console.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,7 +70,9 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button type="submit" className="login-btn">Login to Dashboard</button>
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? 'Signing in...' : 'Login to Dashboard'}
+          </button>
         </form>
       </div>
     </div>
