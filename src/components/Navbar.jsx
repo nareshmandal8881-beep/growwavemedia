@@ -21,6 +21,18 @@ export default function Navbar({ onEnrollClick }) {
         </div>
 
         <div className="nav-actions">
+          <Link 
+            to="/portal/login" 
+            className="nav-cta desktop-only" 
+            style={{ 
+              background: 'transparent', 
+              color: 'var(--ink)', 
+              border: '2px solid var(--border)', 
+              marginRight: '-0.5rem' 
+            }}
+          >
+            Creator Login
+          </Link>
           <button 
             onClick={onEnrollClick} 
             className="nav-cta desktop-only"
@@ -46,6 +58,7 @@ export default function Navbar({ onEnrollClick }) {
           <Link to="/about" className="mobile-link" onClick={() => setIsOpen(false)}>About Us</Link>
           <a href="/#services" className="mobile-link" onClick={() => setIsOpen(false)}>Services</a>
           <a href="/#contact" className="mobile-link" onClick={() => setIsOpen(false)}>Contact</a>
+          <Link to="/portal/login" className="mobile-link" onClick={() => setIsOpen(false)}>Creator Login</Link>
           <button 
             onClick={() => {
               setIsOpen(false);

@@ -2648,6 +2648,7 @@ body {
   padding: 1.5rem;
   border-bottom: 1px solid rgba(255,255,255,0.03);
   vertical-align: top;
+  color: #ffffff;
 }
 
 .col-date {

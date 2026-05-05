@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -19,6 +20,7 @@ console.log("Initializing Firebase with Project ID:", firebaseConfig.projectId);
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 // For debugging in browser console
 if (typeof window !== 'undefined') {
@@ -26,5 +28,5 @@ if (typeof window !== 'undefined') {
   window.firestore_db = db;
 }
 
-export { db, auth };
+export { db, auth, storage };
 export default app;
