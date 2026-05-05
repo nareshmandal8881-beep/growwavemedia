@@ -188,7 +188,7 @@ function CreatorsPanel() {
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name:'', email:'', phone:'', platform:'', paymentDetails:'', password:'' });
+  const [form, setForm] = useState({ name:'', email:'', phone:'', channelName:'', youtubeLink:'', instagramLink:'', paymentDetails:'', password:'' });
   const [saving, setSaving] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [updating, setUpdating] = useState(false);
@@ -199,7 +199,9 @@ function CreatorsPanel() {
       await updateDoc(doc(db, 'portal_creators', selectedCreator.id), {
         name: selectedCreator.name || '',
         phone: selectedCreator.phone || '',
-        platform: selectedCreator.platform || '',
+        channelName: selectedCreator.channelName || '',
+        youtubeLink: selectedCreator.youtubeLink || '',
+        instagramLink: selectedCreator.instagramLink || '',
         paymentDetails: selectedCreator.paymentDetails || ''
       });
       setCreators(prev => prev.map(c => c.id === selectedCreator.id ? selectedCreator : c));
@@ -230,12 +232,15 @@ function CreatorsPanel() {
       await addDoc(collection(db, 'portal_creators'), {
         uid: cred.user.uid,
         name: form.name, email: form.email,
-        phone: form.phone, platform: form.platform,
+        phone: form.phone,
+        channelName: form.channelName,
+        youtubeLink: form.youtubeLink,
+        instagramLink: form.instagramLink,
         paymentDetails: form.paymentDetails,
         createdAt: serverTimestamp(),
       });
       setShowForm(false);
-      setForm({ name:'', email:'', phone:'', platform:'', paymentDetails:'', password:'' });
+      setForm({ name:'', email:'', phone:'', channelName:'', youtubeLink:'', instagramLink:'', paymentDetails:'', password:'' });
       fetchCreators();
     } catch (err) {
       alert('Error: ' + err.message);
@@ -255,10 +260,10 @@ function CreatorsPanel() {
         <form onSubmit={handleCreate} className="admin-form-card">
           <h3>Create Creator Account</h3>
           <div className="admin-form-grid">
-            {[['name','Full Name','text'],['email','Email','email'],['phone','Phone','tel'],['platform','Platform (YT/IG/etc.)','text'],['paymentDetails','UPI / Bank Details','text'],['password','Temporary Password','password']].map(([n,l,t]) => (
+            {[['name','Full Name','text'],['email','Email','email'],['phone','Phone','tel'],['channelName','Channel Name','text'],['youtubeLink','YouTube Link','url'],['instagramLink','Instagram Link','url'],['paymentDetails','UPI / Bank Details','text'],['password','Temporary Password','password']].map(([n,l,t]) => (
               <div className="portal-field" key={n}>
                 <label>{l}</label>
-                <input type={t} value={form[n]} required
+                <input type={t} value={form[n]} required={n!=='phone' && n!=='paymentDetails'}
                   onChange={e => setForm(p => ({...p,[n]:e.target.value}))} />
               </div>
             ))}
@@ -272,14 +277,14 @@ function CreatorsPanel() {
       {loading ? <div className="dash-loader"><div className="spinner"/></div> : (
         <div className="dash-table-wrap">
           <table className="dash-table">
-            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Platform</th><th>Action</th></tr></thead>
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Channel Name</th><th>Action</th></tr></thead>
             <tbody>
               {creators.map(c => (
                 <tr key={c.id}>
                   <td><div className="row-name">{c.name}</div></td>
                   <td><div className="row-email">{c.email}</div></td>
                   <td><div className="row-phone">{c.phone || '—'}</div></td>
-                  <td><div>{c.platform || '—'}</div></td>
+                  <td><div>{c.channelName || '—'}</div></td>
                   <td>
                     <button className="row-view-btn" onClick={() => setSelectedCreator(c)} title="View Details"><Search size={18}/></button>
                   </td>
@@ -316,8 +321,16 @@ function CreatorsPanel() {
                     <input type="tel" value={selectedCreator.phone || ''} onChange={e => setSelectedCreator({...selectedCreator, phone: e.target.value})} placeholder="+91..." />
                   </div>
                   <div className="portal-field">
-                    <label>Platform (e.g. YouTube, Instagram)</label>
-                    <input type="text" value={selectedCreator.platform || ''} onChange={e => setSelectedCreator({...selectedCreator, platform: e.target.value})} placeholder="Instagram" />
+                    <label>Channel Name</label>
+                    <input type="text" value={selectedCreator.channelName || ''} onChange={e => setSelectedCreator({...selectedCreator, channelName: e.target.value})} placeholder="e.g. CarryMinati" />
+                  </div>
+                  <div className="portal-field">
+                    <label>YouTube Link</label>
+                    <input type="url" value={selectedCreator.youtubeLink || ''} onChange={e => setSelectedCreator({...selectedCreator, youtubeLink: e.target.value})} placeholder="https://youtube.com/@username" />
+                  </div>
+                  <div className="portal-field">
+                    <label>Instagram Link</label>
+                    <input type="url" value={selectedCreator.instagramLink || ''} onChange={e => setSelectedCreator({...selectedCreator, instagramLink: e.target.value})} placeholder="https://instagram.com/username" />
                   </div>
                 </div>
               </div>
@@ -352,7 +365,7 @@ function DealsPanel() {
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title:'', creatorId:'', deliverables:'', amount:'', platform:'', deadline:'' });
+  const [form, setForm] = useState({ title:'', creatorId:'', deliverables:'', amount:'', platform:'', videoType:'', deadline:'' });
   const [saving, setSaving] = useState(false);
 
   const fetchAll = async () => {
@@ -376,11 +389,14 @@ function DealsPanel() {
       await addDoc(collection(db, 'portal_deals'), {
         ...form,
         creatorName: creator?.name || '',
-        status: 'pending',
+        channelName: creator?.channelName || '',
+        youtubeLink: creator?.youtubeLink || '',
+        instagramLink: creator?.instagramLink || '',
+        status: 'locked', // Deal is locked until admin approves
         createdAt: serverTimestamp(),
       });
       setShowForm(false);
-      setForm({ title:'', creatorId:'', deliverables:'', amount:'', platform:'', deadline:'' });
+      setForm({ title:'', creatorId:'', deliverables:'', amount:'', platform:'', videoType:'', deadline:'' });
       fetchAll();
     } catch (err) { alert(err.message); }
     finally { setSaving(false); }
@@ -389,6 +405,12 @@ function DealsPanel() {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this deal?')) return;
     await deleteDoc(doc(db, 'portal_deals', id));
+    fetchAll();
+  };
+
+  const handleApproveDeal = async (id) => {
+    if (!window.confirm('Approve this deal and notify the creator?')) return;
+    await updateDoc(doc(db, 'portal_deals', id), { status: 'approved' });
     fetchAll();
   };
 
@@ -422,6 +444,14 @@ function DealsPanel() {
                 {PLATFORMS.map(p => <option key={p}>{p}</option>)}
               </select>
             </div>
+            <div className="portal-field"><label>Video Type *</label>
+              <select value={form.videoType} required onChange={e => setForm(p=>({...p,videoType:e.target.value}))}>
+                <option value="">Select type…</option>
+                <option value="Integrated">Integrated</option>
+                <option value="Dedicated">Dedicated</option>
+                <option value="Media Ads">Media Ads</option>
+              </select>
+            </div>
             <div className="portal-field"><label>Amount (₹) *</label>
               <input type="number" value={form.amount} required onChange={e => setForm(p=>({...p,amount:e.target.value}))} />
             </div>
@@ -441,17 +471,22 @@ function DealsPanel() {
       {loading ? <div className="dash-loader"><div className="spinner"/></div> : (
         <div className="dash-table-wrap">
           <table className="dash-table">
-            <thead><tr><th>Title</th><th>Creator</th><th>Platform</th><th>Amount</th><th>Deadline</th><th>Status</th><th>Action</th></tr></thead>
+            <thead><tr><th>Title</th><th>Creator</th><th>Video Type</th><th>Amount</th><th>Deadline</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
               {deals.map(d => (
                 <tr key={d.id}>
                   <td><div className="row-name">{d.title}</div></td>
                   <td><div>{d.creatorName}</div></td>
-                  <td><div>{d.platform || '—'}</div></td>
+                  <td><div>{d.videoType || '—'}</div></td>
                   <td><div>₹{Number(d.amount||0).toLocaleString('en-IN')}</div></td>
                   <td><div>{d.deadline || '—'}</div></td>
                   <td><StatusBadge status={d.status}/></td>
-                  <td><button className="row-delete-btn" onClick={() => handleDelete(d.id)}><Trash2 size={16}/></button></td>
+                  <td style={{display: 'flex', gap: '0.5rem'}}>
+                    {d.status === 'locked' && (
+                      <button className="portal-btn portal-btn--sm portal-btn--primary" onClick={() => handleApproveDeal(d.id)}>Approve</button>
+                    )}
+                    <button className="row-delete-btn" onClick={() => handleDelete(d.id)}><Trash2 size={16}/></button>
+                  </td>
                 </tr>
               ))}
               {deals.length === 0 && <tr><td colSpan={7} style={{textAlign:'center',padding:'2rem',color:'var(--dash-muted)'}}>No deals yet</td></tr>}
@@ -469,6 +504,8 @@ function SubmissionsPanel() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
   const [rejectNote, setRejectNote] = useState('');
+  const [paymentForms, setPaymentForms] = useState({});
+  const [paying, setPaying] = useState(false);
 
   const fetchSubs = async () => {
     setLoading(true);
@@ -479,30 +516,56 @@ function SubmissionsPanel() {
 
   useEffect(() => { fetchSubs(); }, []);
 
-  const handleApprove = async (sub) => {
-    // 1. Update submission
-    await updateDoc(doc(db, 'portal_submissions', sub.id), { status: 'approved', reviewedAt: serverTimestamp() });
-    // 2. Update deal
-    await updateDoc(doc(db, 'portal_deals', sub.dealId), { status: 'payment_review', updatedAt: serverTimestamp() });
-    // 3. Auto-generate invoice
-    const invId = generateInvoiceId();
-    await addDoc(collection(db, 'portal_invoices'), {
-      invoiceId: invId,
-      dealId: sub.dealId,
-      dealTitle: sub.dealTitle,
-      creatorId: sub.creatorId,
-      creatorName: sub.creatorName,
-      creatorEmail: sub.creatorEmail || '',
-      creatorPhone: sub.creatorPhone || '',
-      platform: sub.platform,
-      amount: sub.amount,
-      utrId: sub.utrId,
-      status: 'pending_signature',
-      date: new Date().toLocaleDateString('en-IN'),
-      createdAt: serverTimestamp(),
-    });
-    alert(`✅ Approved! Invoice ${invId} generated for creator.`);
-    fetchSubs();
+  const handleApproveAndPay = async (sub) => {
+    const pForm = paymentForms[sub.id] || {};
+    if (!pForm.utrId) {
+      alert("Please enter a UTR ID to mark as paid.");
+      return;
+    }
+    setPaying(true);
+    try {
+      let proofUrl = '';
+      if (pForm.file) {
+        const storageRef = ref(storage, `admin_payments/${sub.id}/${Date.now()}_${pForm.file.name}`);
+        await uploadBytes(storageRef, pForm.file);
+        proofUrl = await getDownloadURL(storageRef);
+      }
+
+      // 1. Update submission
+      await updateDoc(doc(db, 'portal_submissions', sub.id), { 
+        status: 'paid', 
+        adminUtrId: pForm.utrId,
+        adminProofUrl: proofUrl,
+        reviewedAt: serverTimestamp() 
+      });
+      // 2. Update deal
+      await updateDoc(doc(db, 'portal_deals', sub.dealId), { status: 'completed', updatedAt: serverTimestamp() });
+      
+      // 3. Auto-generate invoice
+      const invId = generateInvoiceId();
+      await addDoc(collection(db, 'portal_invoices'), {
+        invoiceId: invId,
+        dealId: sub.dealId,
+        dealTitle: sub.dealTitle,
+        creatorId: sub.creatorId,
+        creatorName: sub.creatorName,
+        creatorEmail: sub.creatorEmail || '',
+        creatorPhone: sub.creatorPhone || '',
+        videoType: sub.videoType || '',
+        amount: sub.amount || '',
+        utrId: pForm.utrId,
+        signatureData: sub.signatureData || null,
+        status: 'completed',
+        date: new Date().toLocaleDateString('en-IN'),
+        createdAt: serverTimestamp(),
+      });
+      alert(`✅ Paid & Approved! Invoice ${invId} generated.`);
+      fetchSubs();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setPaying(false);
+    }
   };
 
   const handleReject = async (sub) => {
@@ -541,38 +604,55 @@ function SubmissionsPanel() {
                       <h4>Content Proof</h4>
                       <div className="portal-review-row"><span>Video Link</span><a href={sub.videoLink} target="_blank" rel="noreferrer">{sub.videoLink}</a></div>
                       <div className="portal-review-row"><span>Timestamp</span><strong>{sub.timestamp}</strong></div>
-                      <div className="portal-review-row"><span>Platform</span><strong>{sub.platform}</strong></div>
-                      <div className="portal-review-row"><span>Notes</span><em>{sub.deliverableNotes||'—'}</em></div>
                     </div>
                     <div className="portal-review-section">
-                      <h4>Payment Proof</h4>
+                      <h4>Payment Details (Creator)</h4>
                       <div className="portal-review-row"><span>Amount</span><strong>₹{Number(sub.amount||0).toLocaleString('en-IN')}</strong></div>
-                      <div className="portal-review-row"><span>UTR ID</span><strong style={{fontFamily:'monospace'}}>{sub.utrId}</strong></div>
-                      {sub.proofUrl && (
+                      <div className="portal-review-row"><span>Bank / UPI</span><em style={{whiteSpace:'pre-wrap'}}>{sub.paymentDetails || '—'}</em></div>
+                      {sub.signatureData && (
                         <div className="portal-review-row">
-                          <span>Screenshot</span>
-                          <a href={sub.proofUrl} target="_blank" rel="noreferrer">
-                            <img src={sub.proofUrl} alt="Payment proof" style={{width:120,borderRadius:6,border:'1px solid rgba(255,255,255,0.1)'}}/>
-                          </a>
+                          <span>Signature</span>
+                          <img src={sub.signatureData} alt="Signature" style={{maxHeight:'60px', background:'#fff', padding:'4px', borderRadius:'4px'}} />
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {sub.status === 'submitted' && (
-                    <div className="admin-sub-actions">
-                      <button className="portal-btn" style={{background:'#22c55e',color:'#fff'}} onClick={() => handleApprove(sub)}>
-                        <CheckCircle size={16}/> Approve & Generate Invoice
-                      </button>
-                      <div style={{display:'flex',gap:'0.5rem',flex:1}}>
-                        <input
-                          className="comment-thread__input" style={{flex:1}}
-                          placeholder="Rejection reason (optional)…"
-                          value={rejectNote} onChange={e => setRejectNote(e.target.value)}
-                        />
-                        <button className="portal-btn" style={{background:'#ef4444',color:'#fff'}} onClick={() => handleReject(sub)}>
-                          <XCircle size={16}/> Reject
+                  {sub.status === 'paid' && (
+                    <div className="portal-alert portal-alert--success" style={{marginTop:'1rem'}}>
+                      <strong>Paid & Invoice Generated</strong><br/>
+                      UTR: {sub.adminUtrId}
+                      {sub.adminProofUrl && <div><a href={sub.adminProofUrl} target="_blank" rel="noreferrer" style={{color:'inherit',textDecoration:'underline'}}>View Payment Screenshot</a></div>}
+                    </div>
+                  )}
+
+                  {sub.status === 'submitted_video' && (
+                    <div style={{marginTop: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)'}}>
+                      <h4 style={{marginTop: 0, marginBottom: '1rem', color: '#fff'}}>Admin Action: Mark as Paid</h4>
+                      <div className="admin-form-grid" style={{marginBottom: '1rem'}}>
+                        <div className="portal-field">
+                          <label>UTR ID *</label>
+                          <input type="text" placeholder="Enter UTR..." value={paymentForms[sub.id]?.utrId || ''} onChange={e => setPaymentForms(p => ({...p, [sub.id]: {...(p[sub.id]||{}), utrId: e.target.value}}))} />
+                        </div>
+                        <div className="portal-field">
+                          <label>Payment Screenshot</label>
+                          <input type="file" accept="image/*" onChange={e => setPaymentForms(p => ({...p, [sub.id]: {...(p[sub.id]||{}), file: e.target.files[0]}}))} />
+                        </div>
+                      </div>
+                      <div className="admin-sub-actions">
+                        <button className="portal-btn" style={{background:'#22c55e',color:'#fff'}} onClick={() => handleApproveAndPay(sub)} disabled={paying}>
+                          <CheckCircle size={16}/> {paying ? 'Processing...' : 'Mark Paid & Generate Invoice'}
                         </button>
+                        <div style={{display:'flex',gap:'0.5rem',flex:1}}>
+                          <input
+                            className="comment-thread__input" style={{flex:1}}
+                            placeholder="Rejection reason (optional)…"
+                            value={rejectNote} onChange={e => setRejectNote(e.target.value)}
+                          />
+                          <button className="portal-btn" style={{background:'#ef4444',color:'#fff'}} onClick={() => handleReject(sub)}>
+                            <XCircle size={16}/> Reject
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}

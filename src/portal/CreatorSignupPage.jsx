@@ -6,7 +6,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Helmet } from 'react-helmet-async';
 
 export default function CreatorSignupPage() {
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', platform: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', channelName: '', youtubeLink: '', instagramLink: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -29,8 +29,9 @@ export default function CreatorSignupPage() {
         uid: cred.user.uid,
         name: form.name,
         email: form.email,
-        phone: form.phone,
-        platform: form.platform,
+        channelName: form.channelName,
+        youtubeLink: form.youtubeLink,
+        instagramLink: form.instagramLink,
         createdAt: serverTimestamp(),
       });
 
@@ -91,26 +92,41 @@ export default function CreatorSignupPage() {
             </div>
             
             <div className="portal-field">
-              <label htmlFor="phone">Phone Number (Optional)</label>
+              <label htmlFor="channelName">Channel / Creator Name</label>
               <input
-                id="phone"
-                name="phone"
-                type="tel"
-                placeholder="+91 9876543210"
-                value={form.phone}
+                id="channelName"
+                name="channelName"
+                type="text"
+                placeholder="e.g. CarryMinati"
+                value={form.channelName}
                 onChange={handleChange}
+                required
               />
             </div>
             
             <div className="portal-field">
-              <label htmlFor="platform">Primary Platform (Optional)</label>
+              <label htmlFor="youtubeLink">YouTube Channel Link</label>
               <input
-                id="platform"
-                name="platform"
-                type="text"
-                placeholder="YouTube, Instagram, etc."
-                value={form.platform}
+                id="youtubeLink"
+                name="youtubeLink"
+                type="url"
+                placeholder="https://youtube.com/@username"
+                value={form.youtubeLink}
                 onChange={handleChange}
+                required
+              />
+            </div>
+            
+            <div className="portal-field">
+              <label htmlFor="instagramLink">Instagram Profile Link</label>
+              <input
+                id="instagramLink"
+                name="instagramLink"
+                type="url"
+                placeholder="https://instagram.com/username"
+                value={form.instagramLink}
+                onChange={handleChange}
+                required
               />
             </div>
 

@@ -8,12 +8,10 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Helmet } from 'react-helmet-async';
-import StepIndicator from './components/StepIndicator';
-import CommentThread from './components/CommentThread';
+import SignatureCanvas from './components/SignatureCanvas';
 import { Upload, CheckCircle2, ArrowLeft, ArrowRight } from 'lucide-react';
 
-const STEPS = ['Content Proof', 'Payment Proof', 'Review & Submit'];
-const PLATFORMS = ['Instagram', 'YouTube', 'Facebook', 'Twitter/X', 'LinkedIn', 'Other'];
+const STEPS = ['Content Links', 'Bank Details', 'Digital Signature'];
 
 export default function DealSubmitPage() {
   const { id } = useParams();
@@ -28,14 +26,12 @@ export default function DealSubmitPage() {
   const [existingSubId, setExistingSubId] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
 
+  const [sigData, setSigData] = useState(null);
+
   const [form, setForm] = useState({
     videoLink: '',
     timestamp: '',
-    platform: '',
-    deliverableNotes: '',
-    amount: '',
-    utrId: '',
-    proofFile: null,
+    paymentDetails: '',
   });
   const [errors, setErrors] = useState({});
 
@@ -53,13 +49,18 @@ export default function DealSubmitPage() {
 
         // Get deal
         const dealDoc = await getDoc(doc(db, 'portal_deals', id));
-        if (!dealDoc.exists() || dealDoc.data().creatorId !== creatorData.id) {
+        if (!dealDoc.exists()) {
           navigate('/portal/dashboard');
           return;
         }
         const dealData = { id: dealDoc.id, ...dealDoc.data() };
+        // If creatorId is set, verify ownership. Old deals may not have it.
+        if (dealData.creatorId && dealData.creatorId !== creatorData.id) {
+          navigate('/portal/dashboard');
+          return;
+        }
         setDeal(dealData);
-        setForm((f) => ({ ...f, amount: dealData.amount || '', platform: dealData.platform || '' }));
+        setForm((f) => ({ ...f, paymentDetails: creatorData.paymentDetails || '' }));
 
         // Check existing submission
         const sq = query(collection(db, 'portal_submissions'), where('dealId', '==', id));
@@ -71,10 +72,9 @@ export default function DealSubmitPage() {
             ...f,
             videoLink: sub.videoLink || '',
             timestamp: sub.timestamp || '',
-            platform: sub.platform || f.platform,
-            deliverableNotes: sub.deliverableNotes || '',
-            utrId: sub.utrId || '',
+            paymentDetails: sub.paymentDetails || f.paymentDetails,
           }));
+          if (sub.signatureData) setSigData(sub.signatureData);
         }
       } catch (err) {
         console.error(err);
@@ -86,25 +86,22 @@ export default function DealSubmitPage() {
   }, [id, navigate]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'proofFile' && files[0]) {
-      setForm((f) => ({ ...f, proofFile: files[0] }));
-      setFilePreview(URL.createObjectURL(files[0]));
-    } else {
-      setForm((f) => ({ ...f, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
     setErrors((e) => ({ ...e, [name]: '' }));
   };
 
   const validateStep = () => {
     const e = {};
     if (step === 0) {
-      if (!form.videoLink.trim()) e.videoLink = 'Video link is required';
+      if (!form.videoLink.trim()) e.videoLink = 'Unlisted Video link is required';
       if (!form.timestamp.trim()) e.timestamp = 'Timestamp is required';
-      if (!form.platform) e.platform = 'Platform is required';
     }
     if (step === 1) {
-      if (!form.utrId.trim()) e.utrId = 'UTR ID is required';
+      if (!form.paymentDetails.trim()) e.paymentDetails = 'Payment details are required';
+    }
+    if (step === 2) {
+      if (!sigData) e.signature = 'Signature is mandatory';
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -117,13 +114,6 @@ export default function DealSubmitPage() {
     if (!validateStep()) return;
     setSubmitting(true);
     try {
-      let proofUrl = '';
-      if (form.proofFile) {
-        const storageRef = ref(storage, `submissions/${id}/${Date.now()}_${form.proofFile.name}`);
-        await uploadBytes(storageRef, form.proofFile);
-        proofUrl = await getDownloadURL(storageRef);
-      }
-
       const subData = {
         dealId: id,
         dealTitle: deal.title,
@@ -131,12 +121,11 @@ export default function DealSubmitPage() {
         creatorName: creator.name,
         videoLink: form.videoLink,
         timestamp: form.timestamp,
-        platform: form.platform,
-        deliverableNotes: form.deliverableNotes,
-        amount: form.amount,
-        utrId: form.utrId,
-        proofUrl,
-        status: 'submitted',
+        paymentDetails: form.paymentDetails,
+        signatureData: sigData,
+        amount: deal.amount || '',
+        videoType: deal.videoType || '',
+        status: 'submitted_video',
         submittedAt: serverTimestamp(),
       };
 
@@ -148,8 +137,13 @@ export default function DealSubmitPage() {
 
       // Update deal status
       await updateDoc(doc(db, 'portal_deals', id), {
-        status: 'submitted',
+        status: 'submitted_video',
         updatedAt: serverTimestamp(),
+      });
+
+      // Also update creator's profile with the latest payment details
+      await updateDoc(doc(db, 'portal_creators', creator.id), {
+        paymentDetails: form.paymentDetails,
       });
 
       setSubmitted(true);
@@ -189,7 +183,7 @@ export default function DealSubmitPage() {
         <title>Submit Deal | Creator Portal</title>
         <meta name="robots" content="noindex" />
       </Helmet>
-      <div className="portal-submit-layout">
+      <div className="portal-submit-layout" style={{ background: 'var(--portal-bg)', minHeight: '100vh' }}>
         <div className="portal-submit-header">
           <Link to="/portal/dashboard" className="portal-back-link">
             <ArrowLeft size={16} /> Dashboard
@@ -208,11 +202,11 @@ export default function DealSubmitPage() {
           {/* Step 0 — Content Proof */}
           {step === 0 && (
             <div className="portal-step-body">
-              <h2>Content Proof</h2>
-              <p className="portal-step-desc">Provide details about the content you published for this deal.</p>
+              <h2>Content Submission</h2>
+              <p className="portal-step-desc">Provide the unlisted link to your promotional content.</p>
 
               <div className="portal-field">
-                <label htmlFor="videoLink">Video / Post Link *</label>
+                <label htmlFor="videoLink">Unlisted Video Link *</label>
                 <input
                   id="videoLink" name="videoLink" type="url"
                   placeholder="https://youtube.com/watch?v=…"
@@ -222,7 +216,7 @@ export default function DealSubmitPage() {
               </div>
 
               <div className="portal-field">
-                <label htmlFor="timestamp">Timestamp / Mention Time *</label>
+                <label htmlFor="timestamp">Promotion Time Stamp *</label>
                 <input
                   id="timestamp" name="timestamp" type="text"
                   placeholder="e.g. 2:35 — 3:10"
@@ -230,93 +224,42 @@ export default function DealSubmitPage() {
                 />
                 {errors.timestamp && <span className="portal-field-error">{errors.timestamp}</span>}
               </div>
-
-              <div className="portal-field">
-                <label htmlFor="platform">Platform *</label>
-                <select id="platform" name="platform" value={form.platform} onChange={handleChange}>
-                  <option value="">Select platform…</option>
-                  {PLATFORMS.map((p) => <option key={p}>{p}</option>)}
-                </select>
-                {errors.platform && <span className="portal-field-error">{errors.platform}</span>}
-              </div>
-
-              <div className="portal-field">
-                <label htmlFor="deliverableNotes">Deliverable Notes</label>
-                <textarea
-                  id="deliverableNotes" name="deliverableNotes" rows={4}
-                  placeholder="Describe what was delivered, any special mentions, etc."
-                  value={form.deliverableNotes} onChange={handleChange}
-                />
-              </div>
             </div>
           )}
 
-          {/* Step 1 — Payment Proof */}
+          {/* Step 1 — Bank Details */}
           {step === 1 && (
             <div className="portal-step-body">
-              <h2>Payment Proof</h2>
-              <p className="portal-step-desc">Provide your payment details and upload a screenshot for verification.</p>
+              <h2>Payment Details</h2>
+              <p className="portal-step-desc">Provide your bank or UPI details. This will be automatically added to your invoice.</p>
 
-              <div className="portal-field">
-                <label htmlFor="amount">Deal Amount (₹)</label>
-                <input
-                  id="amount" name="amount" type="text"
-                  value={form.amount} readOnly
-                  style={{ opacity: 0.7, cursor: 'not-allowed' }}
+              <div className="portal-field" style={{ gridColumn: '1 / -1' }}>
+                <label>Bank Name, A/C No, Holder Name, IFSC, or UPI ID *</label>
+                <textarea 
+                  name="paymentDetails"
+                  rows="4" 
+                  value={form.paymentDetails} 
+                  onChange={handleChange}
+                  placeholder="e.g. Bank Name: HDFC&#10;Account No: 123456789&#10;IFSC: HDFC0001234&#10;Holder Name: John Doe&#10;OR UPI ID: johndoe@upi"
                 />
-              </div>
-
-              <div className="portal-field">
-                <label htmlFor="utrId">UTR / Transaction ID *</label>
-                <input
-                  id="utrId" name="utrId" type="text"
-                  placeholder="Enter UTR or transaction reference number"
-                  value={form.utrId} onChange={handleChange}
-                />
-                {errors.utrId && <span className="portal-field-error">{errors.utrId}</span>}
-              </div>
-
-              <div className="portal-field">
-                <label>Payment Screenshot</label>
-                <label htmlFor="proofFile" className="portal-upload-label">
-                  <Upload size={24} />
-                  <span>{form.proofFile ? form.proofFile.name : 'Click to upload screenshot'}</span>
-                  <input
-                    id="proofFile" name="proofFile" type="file"
-                    accept="image/*" onChange={handleChange} style={{ display: 'none' }}
-                  />
-                </label>
-                {filePreview && (
-                  <img src={filePreview} alt="Payment proof preview" className="portal-file-preview" />
-                )}
+                {errors.paymentDetails && <span className="portal-field-error">{errors.paymentDetails}</span>}
               </div>
             </div>
           )}
 
-          {/* Step 2 — Review */}
+          {/* Step 2 — Digital Signature */}
           {step === 2 && (
             <div className="portal-step-body">
-              <h2>Review & Submit</h2>
-              <p className="portal-step-desc">Please review all details before submitting.</p>
-
-              <div className="portal-review-grid">
-                <div className="portal-review-section">
-                  <h4>Content Proof</h4>
-                  <div className="portal-review-row"><span>Video Link</span><a href={form.videoLink} target="_blank" rel="noreferrer">{form.videoLink || '—'}</a></div>
-                  <div className="portal-review-row"><span>Timestamp</span><strong>{form.timestamp || '—'}</strong></div>
-                  <div className="portal-review-row"><span>Platform</span><strong>{form.platform || '—'}</strong></div>
-                  <div className="portal-review-row"><span>Notes</span><em>{form.deliverableNotes || '—'}</em></div>
-                </div>
-                <div className="portal-review-section">
-                  <h4>Payment Proof</h4>
-                  <div className="portal-review-row"><span>Amount</span><strong>₹{Number(form.amount || 0).toLocaleString('en-IN')}</strong></div>
-                  <div className="portal-review-row"><span>UTR ID</span><strong className="portal-mono">{form.utrId || '—'}</strong></div>
-                  <div className="portal-review-row"><span>Screenshot</span><strong>{form.proofFile ? '✓ Attached' : 'Not uploaded'}</strong></div>
-                </div>
+              <h2>Digital Signature</h2>
+              <p className="portal-step-desc">Please draw your signature below. This signature will be automatically attached to your invoice once payment is received.</p>
+              
+              <div style={{ marginTop: '1rem', border: errors.signature ? '2px solid red' : 'none' }}>
+                <SignatureCanvas onSignature={setSigData} />
               </div>
-
+              {errors.signature && <span className="portal-field-error" style={{display:'block',marginTop:'0.5rem'}}>{errors.signature}</span>}
+              
               {existingSubId && (
-                <div className="portal-alert portal-alert--info">
+                <div className="portal-alert portal-alert--info" style={{ marginTop: '2rem' }}>
                   You have a previous submission. This will overwrite it.
                 </div>
               )}

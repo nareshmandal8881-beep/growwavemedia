@@ -6,7 +6,6 @@ import {
   doc, getDoc, updateDoc, serverTimestamp, collection, addDoc,
 } from 'firebase/firestore';
 import { Helmet } from 'react-helmet-async';
-import SignatureCanvas from './components/SignatureCanvas';
 import StatusBadge from './components/StatusBadge';
 import { FileText, ArrowLeft, CheckCircle2 } from 'lucide-react';
 
@@ -23,9 +22,6 @@ export default function InvoiceView() {
 
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sigData, setSigData] = useState(null);
-  const [signing, setSigning] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
   const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
@@ -48,24 +44,6 @@ export default function InvoiceView() {
     return unsub;
   }, [id, navigate]);
 
-  const handleConfirm = async () => {
-    if (!sigData) { alert('Please draw your signature first.'); return; }
-    setSigning(true);
-    try {
-      await updateDoc(doc(db, 'portal_invoices', id), {
-        status: 'signed',
-        signatureData: sigData,
-        signedAt: serverTimestamp(),
-      });
-      setConfirmed(true);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to confirm: ' + err.message);
-    } finally {
-      setSigning(false);
-    }
-  };
-
   const handlePrint = () => window.print();
 
   if (loading) {
@@ -79,19 +57,6 @@ export default function InvoiceView() {
 
   if (!invoice) return null;
 
-  if (confirmed) {
-    return (
-      <div className="portal-success-screen">
-        <div className="portal-success-icon"><CheckCircle2 size={64} color="#34d399" /></div>
-        <h2>Invoice Signed & Confirmed!</h2>
-        <p>Invoice <strong>{invoice.invoiceId}</strong> has been signed and saved.</p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to="/portal/dashboard" className="portal-btn portal-btn--primary">Back to Dashboard</Link>
-          <button className="portal-btn portal-btn--ghost" onClick={handlePrint}>Print Invoice</button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -182,35 +147,19 @@ export default function InvoiceView() {
           </div>
 
           {/* Signature Section */}
-          {invoice.status === 'signed' ? (
+          {invoice.signatureData ? (
             <div className="inv-sig-section">
               <h3 className="inv-section__title">Creator Signature</h3>
               <div className="inv-sig-display">
                 <img src={invoice.signatureData} alt="Creator signature" className="inv-sig-img" />
                 <p className="inv-sig-name">{invoice.creatorName}</p>
-                <p className="inv-sig-date">Signed on {invoice.signedAt?.toDate
-                  ? invoice.signedAt.toDate().toLocaleDateString('en-IN')
-                  : invoice.date}</p>
+                <p className="inv-sig-date">Signed electronically during submission.</p>
               </div>
             </div>
           ) : (
-            isCreator && (
-              <div className="inv-sig-section no-print">
-                <h3 className="inv-section__title">Sign Invoice</h3>
-                <p style={{ marginBottom: '1rem', color: 'var(--portal-muted)' }}>
-                  By signing below, you confirm the deal details and payment are correct.
-                </p>
-                <SignatureCanvas onSignature={setSigData} />
-                <button
-                  className="portal-btn portal-btn--primary"
-                  style={{ marginTop: '1.5rem' }}
-                  onClick={handleConfirm}
-                  disabled={signing || !sigData}
-                >
-                  {signing ? <span className="portal-btn-spinner" /> : '✅ Confirm & Sign Invoice'}
-                </button>
-              </div>
-            )
+            <div className="inv-sig-section no-print">
+              <p style={{ color: 'var(--portal-muted)' }}>No signature attached.</p>
+            </div>
           )}
 
           {/* Footer */}

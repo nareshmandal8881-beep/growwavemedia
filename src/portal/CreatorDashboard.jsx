@@ -19,7 +19,7 @@ export default function CreatorDashboard() {
   const [tab, setTab] = useState('deals');
   const [loading, setLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({ phone: '', platform: '', paymentDetails: '' });
+  const [profileForm, setProfileForm] = useState({ phone: '', channelName: '', youtubeLink: '', instagramLink: '', paymentDetails: '' });
   const [savingProfile, setSavingProfile] = useState(false);
   const navigate = useNavigate();
 
@@ -36,7 +36,9 @@ export default function CreatorDashboard() {
         setCreator(creatorData);
         setProfileForm({
           phone: creatorData.phone || '',
-          platform: creatorData.platform || '',
+          channelName: creatorData.channelName || '',
+          youtubeLink: creatorData.youtubeLink || '',
+          instagramLink: creatorData.instagramLink || '',
           paymentDetails: creatorData.paymentDetails || ''
         });
 
@@ -81,7 +83,9 @@ export default function CreatorDashboard() {
     try {
       await updateDoc(doc(db, 'portal_creators', creator.id), {
         phone: profileForm.phone,
-        platform: profileForm.platform,
+        channelName: profileForm.channelName,
+        youtubeLink: profileForm.youtubeLink,
+        instagramLink: profileForm.instagramLink,
         paymentDetails: profileForm.paymentDetails
       });
       setCreator({ ...creator, ...profileForm });
@@ -128,23 +132,23 @@ export default function CreatorDashboard() {
               className={`portal-nav-btn ${tab === 'deals' ? 'active' : ''}`}
               onClick={() => setTab('deals')}
             >
-              <LayoutDashboard size={18} /> My Deals
+              <LayoutDashboard size={18} /><span>My Deals</span>
             </button>
             <button
               className={`portal-nav-btn ${tab === 'invoices' ? 'active' : ''}`}
               onClick={() => setTab('invoices')}
             >
-              <FileText size={18} /> Invoices
+              <FileText size={18} /><span>Invoices</span>
             </button>
             <button
               className={`portal-nav-btn ${tab === 'profile' ? 'active' : ''}`}
               onClick={() => setTab('profile')}
             >
-              <User size={18} /> Profile
+              <User size={18} /><span>Profile</span>
             </button>
           </nav>
           <button className="portal-nav-btn portal-nav-btn--logout" onClick={handleLogout}>
-            <LogOut size={18} /> Logout
+            <LogOut size={18} /><span>Logout</span>
           </button>
         </aside>
 
@@ -210,17 +214,23 @@ export default function CreatorDashboard() {
                           </div>
                           <p className="portal-deal-card__desc">{deal.deliverables}</p>
                           <div className="portal-deal-card__actions">
-                            {(deal.status === 'pending') && (
+                            {(deal.status === 'locked' || deal.status === 'pending') && (
+                              <div className="portal-deal-locked-state">
+                                <span className="portal-deal-locked-icon">🔒</span>
+                                <span>Awaiting admin approval to unlock</span>
+                              </div>
+                            )}
+                            {deal.status === 'approved' && (
                               <Link
                                 to={`/portal/deal/${deal.id}`}
                                 className="portal-btn portal-btn--primary"
                               >
-                                Submit Now →
+                                Submit Video →
                               </Link>
                             )}
                             {deal.status === 'submitted' && (
                               <span className="portal-deal-submitted-note">
-                                ✓ Submitted — awaiting admin review
+                                ✓ Video Submitted — awaiting admin review/payment
                               </span>
                             )}
                             {deal.status === 'rejected' && (
@@ -228,7 +238,7 @@ export default function CreatorDashboard() {
                                 to={`/portal/deal/${deal.id}`}
                                 className="portal-btn portal-btn--danger"
                               >
-                                Resubmit →
+                                Resubmit Video →
                               </Link>
                             )}
                             {deal.status === 'payment_review' && (
@@ -322,8 +332,16 @@ export default function CreatorDashboard() {
                           <input type="tel" value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} placeholder="+91..." />
                         </div>
                         <div className="portal-field">
-                          <label>Platform</label>
-                          <input type="text" value={profileForm.platform} onChange={e => setProfileForm({...profileForm, platform: e.target.value})} placeholder="Instagram / YouTube" />
+                          <label>Channel / Creator Name</label>
+                          <input type="text" value={profileForm.channelName} onChange={e => setProfileForm({...profileForm, channelName: e.target.value})} placeholder="e.g. CarryMinati" />
+                        </div>
+                        <div className="portal-field">
+                          <label>YouTube Link</label>
+                          <input type="url" value={profileForm.youtubeLink} onChange={e => setProfileForm({...profileForm, youtubeLink: e.target.value})} placeholder="https://youtube.com/@username" />
+                        </div>
+                        <div className="portal-field">
+                          <label>Instagram Link</label>
+                          <input type="url" value={profileForm.instagramLink} onChange={e => setProfileForm({...profileForm, instagramLink: e.target.value})} placeholder="https://instagram.com/username" />
                         </div>
                         <div className="portal-field" style={{ gridColumn: '1 / -1' }}>
                           <label>UPI / Bank Details</label>
@@ -331,7 +349,7 @@ export default function CreatorDashboard() {
                             rows="3" 
                             value={profileForm.paymentDetails} 
                             onChange={e => setProfileForm({...profileForm, paymentDetails: e.target.value})}
-                            placeholder="Enter UPI ID or Bank Account Details..."
+                            placeholder="Bank Name, A/C No, Holder Name, IFSC, UPI ID..."
                           />
                         </div>
                         <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem', marginTop: '1rem' }}>
@@ -342,7 +360,9 @@ export default function CreatorDashboard() {
                             setIsEditingProfile(false);
                             setProfileForm({
                               phone: creator.phone || '',
-                              platform: creator.platform || '',
+                              channelName: creator.channelName || '',
+                              youtubeLink: creator.youtubeLink || '',
+                              instagramLink: creator.instagramLink || '',
                               paymentDetails: creator.paymentDetails || ''
                             });
                           }}>
@@ -357,7 +377,9 @@ export default function CreatorDashboard() {
                             ['Full Name', creator.name],
                             ['Email', creator.email],
                             ['Phone', creator.phone || '—'],
-                            ['Platform', creator.platform || '—'],
+                            ['Channel Name', creator.channelName || '—'],
+                            ['YouTube Link', creator.youtubeLink || '—'],
+                            ['Instagram Link', creator.instagramLink || '—'],
                             ['UPI / Bank', creator.paymentDetails || '—'],
                             ['Joined', creator.createdAt?.toDate
                               ? creator.createdAt.toDate().toLocaleDateString('en-IN')
@@ -365,7 +387,7 @@ export default function CreatorDashboard() {
                           ].map(([label, val]) => (
                             <div key={label} className="portal-profile-item">
                               <span className="portal-profile-item__label">{label}</span>
-                              <span className="portal-profile-item__val">{val}</span>
+                              <span className="portal-profile-item__val" style={{wordBreak: 'break-all'}}>{val}</span>
                             </div>
                           ))}
                         </div>
