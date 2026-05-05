@@ -3,7 +3,7 @@ import { X, User, Briefcase, Send, CheckCircle2, TrendingUp } from 'lucide-react
 
 export default function EnrollmentModal({ isOpen, onClose }) {
   const [step, setStep] = useState('selection'); // 'selection' | 'form'
-  const [userType, setUserType] = useState(null); // 'creator' | 'influencer' | 'brand'
+  const [userType, setUserType] = useState(null); // 'influencer' | 'brand'
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -11,12 +11,22 @@ export default function EnrollmentModal({ isOpen, onClose }) {
     name: '',
     email: '',
     phone: '',
-    handle: '',
+    // YouTube Section
+    ytName: '',
+    ytLink: '',
+    ytSubs: '',
+    // Instagram Section
+    igHandle: '',
+    igLink: '',
+    igFollowers: '',
+    // Facebook Section
+    fbName: '',
+    fbLink: '',
+    fbFollowers: '',
+    // Common / Brand
     niche: '',
-    followers: '',
     company: '',
     website: '',
-    goals: '',
     message: ''
   });
 
@@ -29,8 +39,11 @@ export default function EnrollmentModal({ isOpen, onClose }) {
         setIsSuccess(false);
         setIsSubmitting(false);
         setFormData({
-          name: '', email: '', phone: '', handle: '',
-          niche: '', followers: '', company: '', website: '', goals: '', message: ''
+          name: '', email: '', phone: '',
+          ytName: '', ytLink: '', ytSubs: '',
+          igHandle: '', igLink: '', igFollowers: '',
+          fbName: '', fbLink: '', fbFollowers: '',
+          niche: '', company: '', website: '', message: ''
         });
       }, 300);
     }
@@ -66,9 +79,22 @@ export default function EnrollmentModal({ isOpen, onClose }) {
               Name: formData.name,
               Email: formData.email,
               Phone: formData.phone,
-              Handle_Company: formData.handle || formData.company,
-              Niche_Website: formData.niche || formData.website,
-              Followers: formData.followers || 'N/A',
+              // YT
+              YT_Name: formData.ytName || 'N/A',
+              YT_Link: formData.ytLink || 'N/A',
+              YT_Subs: formData.ytSubs || 'N/A',
+              // IG
+              IG_Handle: formData.igHandle || 'N/A',
+              IG_Link: formData.igLink || 'N/A',
+              IG_Followers: formData.igFollowers || 'N/A',
+              // FB
+              FB_Name: formData.fbName || 'N/A',
+              FB_Link: formData.fbLink || 'N/A',
+              FB_Followers: formData.fbFollowers || 'N/A',
+              // Brand/Other
+              Company: formData.company || 'N/A',
+              Website: formData.website || 'N/A',
+              Niche: formData.niche || 'N/A',
               Message: formData.message
             }
           ]
@@ -76,16 +102,31 @@ export default function EnrollmentModal({ isOpen, onClose }) {
       });
 
       // 2. PREPARE WHATSAPP MESSAGE
-      const waText = 
+      let waText = 
         `*New Enrollment — Grow Wave Media*%0A%0A` +
         `*Category:* ${userType.toUpperCase()}%0A` +
         `*Name:* ${formData.name}%0A` +
         `*Email:* ${formData.email}%0A` +
-        `*Phone:* ${formData.phone}%0A` +
-        (userType === 'brand' 
-          ? `*Company:* ${formData.company}%0A*Website:* ${formData.website}` 
-          : `*Handle:* ${formData.handle}%0A*Niche:* ${formData.niche}${userType === 'influencer' ? `%0A*Followers:* ${formData.followers}` : ''}`) +
-        `%0A%0A*Message:* ${formData.message}`;
+        `*Phone:* ${formData.phone}%0A`;
+
+      if (userType === 'influencer') {
+        waText += 
+          `%0A*--- YouTube ---*%0A` +
+          `*YT Name:* ${formData.ytName || 'N/A'}%0A` +
+          `*YT Subs:* ${formData.ytSubs || 'N/A'}%0A` +
+          `%0A*--- Instagram ---*%0A` +
+          `*IG Handle:* ${formData.igHandle || 'N/A'}%0A` +
+          `*IG Followers:* ${formData.igFollowers || 'N/A'}%0A` +
+          `%0A*--- Facebook ---*%0A` +
+          `*FB Name:* ${formData.fbName || 'N/A'}%0A` +
+          `*FB Followers:* ${formData.fbFollowers || 'N/A'}%0A`;
+      } else {
+        waText += 
+          `*Company:* ${formData.company}%0A` +
+          `*Website:* ${formData.website}%0A`;
+      }
+
+      waText += `%0A*Message:* ${formData.message}`;
 
       // 3. OPEN WHATSAPP IN NEW TAB
       window.open(`https://wa.me/917063363898?text=${waText}`, '_blank');
@@ -93,15 +134,10 @@ export default function EnrollmentModal({ isOpen, onClose }) {
       if (sheetResponse.ok) {
         setIsSuccess(true);
       } else {
-        // Even if sheet fails, WhatsApp was opened, but we should inform about the sheet
-        console.warn('SheetDB save failed, but WhatsApp was triggered.');
         setIsSuccess(true); 
       }
     } catch (error) {
       console.error('Submission Error:', error);
-      // Fallback: still try to open WhatsApp even if API fails
-      const waTextFallback = `*New Enrollment (Manual):* ${formData.name} (${userType})`;
-      window.open(`https://wa.me/917063363898?text=${waTextFallback}`, '_blank');
       setIsSuccess(true);
     } finally {
       setIsSubmitting(false);
@@ -136,15 +172,7 @@ export default function EnrollmentModal({ isOpen, onClose }) {
                   <p>Choose the option that best describes you to get started.</p>
                 </div>
 
-                <div className="selection-grid">
-                  <button className="selection-card" onClick={() => handleTypeSelect('creator')}>
-                    <div className="card-icon creator">
-                      <User size={32} />
-                    </div>
-                    <h3>You are a Creator</h3>
-                    <p>UGC creators and artists looking for high-end content collaborations.</p>
-                  </button>
-
+                <div className="selection-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
                   <button className="selection-card" onClick={() => handleTypeSelect('influencer')}>
                     <div className="card-icon influencer">
                       <TrendingUp size={32} />
@@ -169,15 +197,14 @@ export default function EnrollmentModal({ isOpen, onClose }) {
                     &larr; Back
                   </button>
                   <h2>
-                    {userType === 'creator' ? 'Creator Enrollment' : 
-                     userType === 'influencer' ? 'Influencer Enrollment' : 
-                     'Brand Enrollment'}
+                    {userType === 'influencer' ? 'Influencer Enrollment' : 'Brand Enrollment'}
                   </h2>
                   <p>Please fill in the details below to apply.</p>
                 </div>
 
                 <form className="enrollment-form" onSubmit={handleSubmit}>
                   <div className="form-grid">
+                    {/* Basic Info */}
                     <div className="form-group">
                       <label>Full Name</label>
                       <input 
@@ -203,7 +230,99 @@ export default function EnrollmentModal({ isOpen, onClose }) {
                       />
                     </div>
 
-                    {userType === 'brand' ? (
+                    {userType === 'influencer' ? (
+                      <>
+                        <div className="form-group">
+                          <label>Niche / Category</label>
+                          <input 
+                            type="text" name="niche" required 
+                            placeholder="e.g. Tech, Fashion, Lifestyle"
+                            value={formData.niche} onChange={handleInputChange} 
+                          />
+                        </div>
+
+                        {/* YouTube Section */}
+                        <div className="form-section-title">📺 YouTube Section</div>
+                        <div className="form-group">
+                          <label>Channel Name</label>
+                          <input 
+                            type="text" name="ytName" 
+                            placeholder="e.g. John's Tech Corner"
+                            value={formData.ytName} onChange={handleInputChange} 
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Channel Link</label>
+                          <input 
+                            type="url" name="ytLink" 
+                            placeholder="e.g. youtube.com/@john"
+                            value={formData.ytLink} onChange={handleInputChange} 
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Subscriber Count</label>
+                          <input 
+                            type="text" name="ytSubs" 
+                            placeholder="e.g. 100K"
+                            value={formData.ytSubs} onChange={handleInputChange} 
+                          />
+                        </div>
+
+                        {/* Instagram Section */}
+                        <div className="form-section-title">📸 Instagram Section</div>
+                        <div className="form-group">
+                          <label>Instagram Handle</label>
+                          <input 
+                            type="text" name="igHandle" 
+                            placeholder="e.g. @john_tech"
+                            value={formData.igHandle} onChange={handleInputChange} 
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Profile Link</label>
+                          <input 
+                            type="url" name="igLink" 
+                            placeholder="e.g. instagram.com/john_tech"
+                            value={formData.igLink} onChange={handleInputChange} 
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Followers Count</label>
+                          <input 
+                            type="text" name="igFollowers" 
+                            placeholder="e.g. 50K"
+                            value={formData.igFollowers} onChange={handleInputChange} 
+                          />
+                        </div>
+
+                        {/* Facebook Section */}
+                        <div className="form-section-title">📘 Facebook Section</div>
+                        <div className="form-group">
+                          <label>Page/Profile Name</label>
+                          <input 
+                            type="text" name="fbName" 
+                            placeholder="e.g. John Doe Official"
+                            value={formData.fbName} onChange={handleInputChange} 
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Page Link</label>
+                          <input 
+                            type="url" name="fbLink" 
+                            placeholder="e.g. facebook.com/johndoe"
+                            value={formData.fbLink} onChange={handleInputChange} 
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Followers Count</label>
+                          <input 
+                            type="text" name="fbFollowers" 
+                            placeholder="e.g. 20K"
+                            value={formData.fbFollowers} onChange={handleInputChange} 
+                          />
+                        </div>
+                      </>
+                    ) : (
                       <>
                         <div className="form-group">
                           <label>Company Name</label>
@@ -222,77 +341,20 @@ export default function EnrollmentModal({ isOpen, onClose }) {
                           />
                         </div>
                       </>
-                    ) : (
-                      <>
-                        <div className="form-group">
-                          <label>Primary Handle (IG/YT/etc.)</label>
-                          <input 
-                            type="text" name="handle" required 
-                            placeholder="e.g. @johndoe_official"
-                            value={formData.handle} onChange={handleInputChange} 
-                          />
-                        </div>
-                        {userType === 'influencer' ? (
-                          <div className="form-group">
-                            <label>Followers Count</label>
-                            <input 
-                              type="text" name="followers" required 
-                              placeholder="e.g. 50K+, 1M"
-                              value={formData.followers} onChange={handleInputChange} 
-                            />
-                          </div>
-                        ) : (
-                          <div className="form-group">
-                            <label>Niche / Category</label>
-                            <input 
-                              type="text" name="niche" required 
-                              placeholder="e.g. Tech, Fashion, Lifestyle"
-                              value={formData.niche} onChange={handleInputChange} 
-                            />
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {userType === 'influencer' && (
-                      <div className="form-group full-width">
-                        <label>Niche / Category</label>
-                        <input 
-                          type="text" name="niche" required 
-                          placeholder="e.g. Tech, Fashion, Lifestyle"
-                          value={formData.niche} onChange={handleInputChange} 
-                        />
-                      </div>
                     )}
 
                     <div className="form-group full-width">
-                      <label>
-                        {userType === 'brand' ? 'Your Marketing Goals' : 
-                         userType === 'creator' ? 'Tell us about your work' : 
-                         'Tell us about your audience'}
-                      </label>
+                      <label>Additional Information</label>
                       <textarea 
                         name="message" rows="3" required
-                        placeholder={
-                          userType === 'brand' ? "What are you looking to achieve?" : 
-                          userType === 'creator' ? "What kind of content do you create? (e.g. UGC, Reels)" : 
-                          "What platforms are you most active on and who is your audience?"
-                        }
+                        placeholder="Tell us more about your work or goals..."
                         value={formData.message} onChange={handleInputChange}
                       ></textarea>
                     </div>
                   </div>
 
                   <button type="submit" className="btn-solid full-width" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <span className="loader-container">
-                        Submitting...
-                      </span>
-                    ) : (
-                      <>
-                        Submit Application <Send size={18} style={{ marginLeft: '8px' }} />
-                      </>
-                    )}
+                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
                   </button>
                 </form>
               </div>
