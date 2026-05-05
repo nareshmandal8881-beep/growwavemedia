@@ -12,6 +12,8 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
+  const [selectedRow, setSelectedRow] = useState(null);
+
   useEffect(() => {
     // Auth Check
     const token = localStorage.getItem('waveAdminToken');
@@ -27,7 +29,6 @@ export default function DashboardPage() {
     try {
       const res = await fetch('https://sheetdb.io/api/v1/myhiyvk7r2sy9');
       const json = await res.json();
-      // SheetDB returns data in reverse order of submission usually, or we can reverse it
       setData(json.reverse());
     } catch (err) {
       console.error('Fetch error:', err);
@@ -148,14 +149,26 @@ export default function DashboardPage() {
                       <td className="col-details">
                         {row.Type === 'influencer' ? (
                           <div className="platform-tags">
-                            {row.YT_Name !== 'N/A' && <span className="tag yt">YT: {row.YT_Subs}</span>}
-                            {row.IG_Handle !== 'N/A' && <span className="tag ig">IG: {row.IG_Followers}</span>}
-                            {row.FB_Name !== 'N/A' && <span className="tag fb">FB: {row.FB_Followers}</span>}
+                            {row.YT_Name !== 'N/A' && (
+                              <a href={row.YT_Link} target="_blank" rel="noreferrer" className="tag yt">
+                                YT: {row.YT_Subs}
+                              </a>
+                            )}
+                            {row.IG_Handle !== 'N/A' && (
+                              <a href={row.IG_Link} target="_blank" rel="noreferrer" className="tag ig">
+                                IG: {row.IG_Followers}
+                              </a>
+                            )}
+                            {row.FB_Name !== 'N/A' && (
+                              <a href={row.FB_Link} target="_blank" rel="noreferrer" className="tag fb">
+                                FB: {row.FB_Followers}
+                              </a>
+                            )}
                           </div>
                         ) : row.Type === 'brand' ? (
                           <div className="brand-meta">
-                            <div>{row.Company}</div>
-                            <a href={row.Website} target="_blank" rel="noreferrer" className="row-link">Visit Website</a>
+                            <div className="row-company">{row.Company}</div>
+                            <a href={row.Website} target="_blank" rel="noreferrer" className="row-link">{row.Website}</a>
                           </div>
                         ) : (
                           <div className="enquiry-meta">
@@ -164,11 +177,11 @@ export default function DashboardPage() {
                         )}
                       </td>
                       <td className="col-msg">
-                        <div className="msg-preview">{row.Message}</div>
+                        <div className="msg-full">{row.Message}</div>
                       </td>
                       <td>
-                        <button className="row-view-btn">
-                          <ChevronRight size={18} />
+                        <button className="row-view-btn" onClick={() => setSelectedRow(row)}>
+                          <Search size={18} />
                         </button>
                       </td>
                     </tr>
@@ -179,6 +192,100 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
+
+      {/* DETAIL MODAL */}
+      {selectedRow && (
+        <div className="dash-modal-overlay" onClick={() => setSelectedRow(null)}>
+          <div className="dash-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-top">
+              <h2>Full Details</h2>
+              <button className="close-btn" onClick={() => setSelectedRow(null)}>&times;</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="detail-section">
+                <label>Basic Information</label>
+                <div className="detail-grid">
+                  <div className="detail-item"><span>Name:</span> {selectedRow.Name}</div>
+                  <div className="detail-item"><span>Email:</span> {selectedRow.Email}</div>
+                  <div className="detail-item"><span>Phone:</span> {selectedRow.Phone}</div>
+                  <div className="detail-item"><span>Type:</span> {selectedRow.Type?.toUpperCase()}</div>
+                  <div className="detail-item"><span>Date:</span> {selectedRow.Date}</div>
+                </div>
+              </div>
+
+              {selectedRow.Type === 'influencer' && (
+                <div className="detail-section">
+                  <label>Social Media Platforms</label>
+                  <div className="platform-detail-grid">
+                    {selectedRow.YT_Name !== 'N/A' && (
+                      <div className="p-detail yt">
+                        <strong>YouTube</strong>
+                        <p>{selectedRow.YT_Name}</p>
+                        <p>{selectedRow.YT_Subs} Subscribers</p>
+                        <a href={selectedRow.YT_Link} target="_blank" rel="noreferrer">Visit Channel &rarr;</a>
+                      </div>
+                    )}
+                    {selectedRow.IG_Handle !== 'N/A' && (
+                      <div className="p-detail ig">
+                        <strong>Instagram</strong>
+                        <p>{selectedRow.IG_Handle}</p>
+                        <p>{selectedRow.IG_Followers} Followers</p>
+                        <a href={selectedRow.IG_Link} target="_blank" rel="noreferrer">Visit Profile &rarr;</a>
+                      </div>
+                    )}
+                    {selectedRow.FB_Name !== 'N/A' && (
+                      <div className="p-detail fb">
+                        <strong>Facebook</strong>
+                        <p>{selectedRow.FB_Name}</p>
+                        <p>{selectedRow.FB_Followers} Followers</p>
+                        <a href={selectedRow.FB_Link} target="_blank" rel="noreferrer">Visit Page &rarr;</a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {(selectedRow.Type === 'brand' || selectedRow.Type === 'Contact Enquiry') && (
+                <div className="detail-section">
+                  <label>{selectedRow.Type === 'brand' ? 'Company Info' : 'Inquiry Info'}</label>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <span>{selectedRow.Type === 'brand' ? 'Company:' : 'Service:'}</span> 
+                      {selectedRow.Type === 'brand' ? selectedRow.Company : selectedRow.Niche_Website}
+                    </div>
+                    {selectedRow.Website !== 'N/A' && (
+                      <div className="detail-item">
+                        <span>Website:</span> 
+                        <a href={selectedRow.Website} target="_blank" rel="noreferrer">{selectedRow.Website}</a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="detail-section">
+                <label>Message / Requirements</label>
+                <div className="message-box">
+                  {selectedRow.Message}
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="btn-close-modal" onClick={() => setSelectedRow(null)}>Close View</button>
+              <a 
+                href={`https://wa.me/${selectedRow.Phone?.replace(/\D/g, '')}`} 
+                target="_blank" rel="noreferrer" 
+                className="btn-wa-direct"
+              >
+                Contact on WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
 }
