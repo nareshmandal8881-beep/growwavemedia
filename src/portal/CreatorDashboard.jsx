@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import {
-  collection, query, where, getDocs, orderBy,
+  collection, query, where, getDocs, orderBy, doc, updateDoc
 } from 'firebase/firestore';
 import { Helmet } from 'react-helmet-async';
 import StatusBadge from './components/StatusBadge';
@@ -18,6 +18,9 @@ export default function CreatorDashboard() {
   const [invoices, setInvoices] = useState([]);
   const [tab, setTab] = useState('deals');
   const [loading, setLoading] = useState(true);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ phone: '', platform: '', paymentDetails: '' });
+  const [savingProfile, setSavingProfile] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,26 +34,35 @@ export default function CreatorDashboard() {
         if (csnap.empty) { await signOut(auth); navigate('/portal/login'); return; }
         const creatorData = { id: csnap.docs[0].id, ...csnap.docs[0].data() };
         setCreator(creatorData);
+        setProfileForm({
+          phone: creatorData.phone || '',
+          platform: creatorData.platform || '',
+          paymentDetails: creatorData.paymentDetails || ''
+        });
 
         // Fetch assigned deals
         const dq = query(
           collection(db, 'portal_deals'),
-          where('creatorId', '==', creatorData.id),
-          orderBy('createdAt', 'desc'),
+          where('creatorId', '==', creatorData.id)
         );
         const dsnap = await getDocs(dq);
-        setDeals(dsnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        const fetchedDeals = dsnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        // Sort in JS instead of Firestore query to avoid requiring composite indexes
+        fetchedDeals.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+        setDeals(fetchedDeals);
 
         // Fetch invoices
         const iq = query(
           collection(db, 'portal_invoices'),
-          where('creatorId', '==', creatorData.id),
-          orderBy('createdAt', 'desc'),
+          where('creatorId', '==', creatorData.id)
         );
         const isnap = await getDocs(iq);
-        setInvoices(isnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        const fetchedInvoices = isnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        fetchedInvoices.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+        setInvoices(fetchedInvoices);
       } catch (err) {
         console.error(err);
+        alert("Error fetching data: " + err.message); // Added this to see if it's a permission issue or index issue
       } finally {
         setLoading(false);
       }
@@ -61,6 +73,25 @@ export default function CreatorDashboard() {
   const handleLogout = async () => {
     await signOut(auth);
     navigate('/portal/login');
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      await updateDoc(doc(db, 'portal_creators', creator.id), {
+        phone: profileForm.phone,
+        platform: profileForm.platform,
+        paymentDetails: profileForm.paymentDetails
+      });
+      setCreator({ ...creator, ...profileForm });
+      setIsEditingProfile(false);
+      alert('Profile updated successfully!');
+    } catch (err) {
+      alert('Error updating profile: ' + err.message);
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const stats = [
@@ -260,35 +291,90 @@ export default function CreatorDashboard() {
                 </section>
               )}
 
-              {/* Profile Tab */}
               {tab === 'profile' && creator && (
                 <section className="portal-section">
-                  <h2 className="portal-section__title">My Profile</h2>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2 className="portal-section__title" style={{ marginBottom: 0 }}>My Profile</h2>
+                    {!isEditingProfile && (
+                      <button className="portal-btn portal-btn--ghost" onClick={() => setIsEditingProfile(true)}>
+                        Edit Details
+                      </button>
+                    )}
+                  </div>
+                  
                   <div className="portal-profile-card">
                     <div className="portal-avatar portal-avatar--lg">
                       {creator.name?.charAt(0).toUpperCase()}
                     </div>
-                    <div className="portal-profile-grid">
-                      {[
-                        ['Full Name', creator.name],
-                        ['Email', creator.email],
-                        ['Phone', creator.phone || '—'],
-                        ['Platform', creator.platform || '—'],
-                        ['UPI / Bank', creator.paymentDetails || '—'],
-                        ['Joined', creator.createdAt?.toDate
-                          ? creator.createdAt.toDate().toLocaleDateString('en-IN')
-                          : '—'],
-                      ].map(([label, val]) => (
-                        <div key={label} className="portal-profile-item">
-                          <span className="portal-profile-item__label">{label}</span>
-                          <span className="portal-profile-item__val">{val}</span>
+                    
+                    {isEditingProfile ? (
+                      <form onSubmit={handleUpdateProfile} className="admin-form-grid" style={{ marginTop: '2rem' }}>
+                        <div className="portal-field">
+                          <label>Full Name</label>
+                          <input type="text" value={creator.name} disabled style={{ opacity: 0.5 }} />
                         </div>
-                      ))}
-                    </div>
-                    <p className="portal-profile-note">
-                      To update your details, contact admin at{' '}
-                      <a href="mailto:growwavemedia@gmail.com">growwavemedia@gmail.com</a>
-                    </p>
+                        <div className="portal-field">
+                          <label>Email</label>
+                          <input type="email" value={creator.email} disabled style={{ opacity: 0.5 }} />
+                        </div>
+                        <div className="portal-field">
+                          <label>Phone</label>
+                          <input type="tel" value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} placeholder="+91..." />
+                        </div>
+                        <div className="portal-field">
+                          <label>Platform</label>
+                          <input type="text" value={profileForm.platform} onChange={e => setProfileForm({...profileForm, platform: e.target.value})} placeholder="Instagram / YouTube" />
+                        </div>
+                        <div className="portal-field" style={{ gridColumn: '1 / -1' }}>
+                          <label>UPI / Bank Details</label>
+                          <textarea 
+                            rows="3" 
+                            value={profileForm.paymentDetails} 
+                            onChange={e => setProfileForm({...profileForm, paymentDetails: e.target.value})}
+                            placeholder="Enter UPI ID or Bank Account Details..."
+                          />
+                        </div>
+                        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                          <button type="submit" className="portal-btn portal-btn--primary" disabled={savingProfile}>
+                            {savingProfile ? 'Saving...' : 'Save Changes'}
+                          </button>
+                          <button type="button" className="portal-btn portal-btn--ghost" onClick={() => {
+                            setIsEditingProfile(false);
+                            setProfileForm({
+                              phone: creator.phone || '',
+                              platform: creator.platform || '',
+                              paymentDetails: creator.paymentDetails || ''
+                            });
+                          }}>
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <div className="portal-profile-grid">
+                          {[
+                            ['Full Name', creator.name],
+                            ['Email', creator.email],
+                            ['Phone', creator.phone || '—'],
+                            ['Platform', creator.platform || '—'],
+                            ['UPI / Bank', creator.paymentDetails || '—'],
+                            ['Joined', creator.createdAt?.toDate
+                              ? creator.createdAt.toDate().toLocaleDateString('en-IN')
+                              : '—'],
+                          ].map(([label, val]) => (
+                            <div key={label} className="portal-profile-item">
+                              <span className="portal-profile-item__label">{label}</span>
+                              <span className="portal-profile-item__val">{val}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="portal-profile-note" style={{ marginTop: '2rem' }}>
+                          Need to change your name or email? Contact admin at{' '}
+                          <a href="mailto:growwavemedia@gmail.com">growwavemedia@gmail.com</a>
+                        </p>
+                      </>
+                    )}
                   </div>
                 </section>
               )}
