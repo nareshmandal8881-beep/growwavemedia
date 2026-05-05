@@ -9,6 +9,8 @@ import ServiceDetailPage from './ServiceDetailPage.jsx'
 import PrivacyPolicyPage from './PrivacyPolicyPage.jsx'
 import TermsPage from './TermsPage.jsx'
 import CompliancePage from './CompliancePage.jsx'
+import LoginPage from './LoginPage.jsx'
+import DashboardPage from './DashboardPage.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -21,6 +23,8 @@ createRoot(document.getElementById('root')).render(
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/compliance" element={<CompliancePage />} />
+          <Route path="/wavelogin" element={<LoginPage />} />
+          <Route path="/wave-dashboard" element={<DashboardPage />} />
         </Routes>
       </BrowserRouter>
     </HelmetProvider>

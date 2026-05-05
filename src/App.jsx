@@ -144,21 +144,48 @@ export default function App() {
 
   const handleChange = (e) => setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setStatus('sending');
     const { name, email, phone, service, message } = formData;
 
-    const text =
-      `*New Enquiry — Grow Wave Media*%0A%0A` +
-      `*Name:* ${name}%0A` +
-      `*Email:* ${email}%0A` +
-      `*Phone:* ${phone || 'Not provided'}%0A` +
-      `*Service:* ${service || 'Not specified'}%0A%0A` +
-      `*Message:*%0A${message}`;
+    try {
+      // 1. SAVE TO GOOGLE SHEET
+      await fetch('https://sheetdb.io/api/v1/myhiyvk7r2sy9', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          data: [{
+            Date: new Date().toLocaleString(),
+            Type: 'Contact Enquiry',
+            Name: name,
+            Email: email,
+            Phone: phone || 'N/A',
+            Niche_Website: service || 'N/A',
+            Message: message
+          }]
+        })
+      });
 
-    window.open(`https://wa.me/917063363898?text=${text}`, '_blank');
-    setStatus('success');
-    setFormData({ name: '', email: '', phone: '', service: '', message: '' });
+      // 2. PREPARE WHATSAPP
+      const text =
+        `*New Enquiry — Grow Wave Media*%0A%0A` +
+        `*Name:* ${name}%0A` +
+        `*Email:* ${email}%0A` +
+        `*Phone:* ${phone || 'Not provided'}%0A` +
+        `*Service:* ${service || 'Not specified'}%0A%0A` +
+        `*Message:*%0A${message}`;
+
+      window.open(`https://wa.me/917063363898?text=${text}`, '_blank');
+      setStatus('success');
+      setFormData({ name: '', email: '', phone: '', service: '', message: '' });
+    } catch (error) {
+      console.error('Contact Error:', error);
+      setStatus('error');
+    }
   };
 
     const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
