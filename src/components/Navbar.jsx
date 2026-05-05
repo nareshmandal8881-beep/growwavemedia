@@ -17,6 +17,7 @@ export default function Navbar({ onEnrollClick }) {
         <div className="nav-links desktop-only">
           <Link to="/about" className="nav-link">About Us</Link>
           <a href="/#services" className="nav-link">Services</a>
+          <Link to="/blog" className="nav-link">Blog</Link>
           <a href="/#contact" className="nav-link">Contact</a>
         </div>
 
@@ -57,6 +58,7 @@ export default function Navbar({ onEnrollClick }) {
         <div className="mobile-menu-links">
           <Link to="/about" className="mobile-link" onClick={() => setIsOpen(false)}>About Us</Link>
           <a href="/#services" className="mobile-link" onClick={() => setIsOpen(false)}>Services</a>
+          <Link to="/blog" className="mobile-link" onClick={() => setIsOpen(false)}>Blog</Link>
           <a href="/#contact" className="mobile-link" onClick={() => setIsOpen(false)}>Contact</a>
           <Link to="/portal/login" className="mobile-link" onClick={() => setIsOpen(false)}>Creator Login</Link>
           <button 

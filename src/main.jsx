@@ -10,6 +10,8 @@ import ServiceDetailPage from './ServiceDetailPage.jsx'
 import PrivacyPolicyPage from './PrivacyPolicyPage.jsx'
 import TermsPage from './TermsPage.jsx'
 import CompliancePage from './CompliancePage.jsx'
+import BlogPage from './BlogPage.jsx'
+import BlogDetailPage from './BlogDetailPage.jsx'
 import LoginPage from './LoginPage.jsx'
 import DashboardPage from './DashboardPage.jsx'
 import CreatorLoginPage from './portal/CreatorLoginPage.jsx'
@@ -30,6 +32,8 @@ createRoot(document.getElementById('root')).render(
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/compliance" element={<CompliancePage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogDetailPage />} />
           <Route path="/wavelogin" element={<LoginPage />} />
           <Route path="/wave-dashboard" element={<DashboardPage />} />
           {/* Creator Portal */}
