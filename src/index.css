@@ -2827,33 +2827,45 @@ body {
   gap: 1.5rem;
 }
 
-.detail-item span { color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-right: 0.5rem; }
-.detail-item { font-weight: 600; font-size: 1rem; }
-
-.platform-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
+.detail-item span { 
+  color: rgba(255,255,255,0.5); /* Fixed: Brighter label */
+  font-size: 0.85rem; 
+  margin-right: 0.5rem; 
+}
+.detail-item { 
+  font-weight: 600; 
+  font-size: 1rem; 
+  color: #ffffff; /* Fixed: Bright white value */
 }
 
-.p-detail {
-  background: rgba(255,255,255,0.03);
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.05);
+.p-detail strong { 
+  display: block; 
+  font-size: 1rem; 
+  margin-bottom: 0.8rem; 
+  color: var(--accent); /* Fixed: Accent color for platform name */
 }
-
-.p-detail strong { display: block; font-size: 0.9rem; margin-bottom: 0.8rem; }
-.p-detail p { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 0.3rem; }
-.p-detail a { font-size: 0.8rem; color: var(--accent); text-decoration: none; font-weight: 700; margin-top: 1rem; display: inline-block; }
+.p-detail p { 
+  font-size: 0.9rem; 
+  color: #ffffff; /* Fixed: Bright white text */
+  margin-bottom: 0.3rem; 
+}
+.p-detail a { 
+  font-size: 0.85rem; 
+  color: var(--accent); 
+  text-decoration: none; 
+  font-weight: 700; 
+  margin-top: 1rem; 
+  display: inline-block; 
+}
 
 .message-box {
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.05);
   padding: 1.5rem;
   border-radius: 16px;
-  color: rgba(255,255,255,0.7);
+  color: #ffffff; /* Fixed: Bright white message */
   line-height: 1.7;
   white-space: pre-wrap;
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .modal-footer {
