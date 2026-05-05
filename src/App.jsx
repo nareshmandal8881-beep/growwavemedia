@@ -190,6 +190,7 @@ export default function App() {
       setFormData({ name: '', email: '', phone: '', service: '', message: '' });
     } catch (error) {
       console.error('Contact Error:', error);
+      alert('Firestore Error: ' + error.message + '. Please check if Firestore Rules allow writes.');
       setStatus('error');
     }
   };

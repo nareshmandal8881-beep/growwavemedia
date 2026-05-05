@@ -121,13 +121,13 @@ export default function EnrollmentModal({ isOpen, onClose }) {
 
       waText += `%0A*Message:* ${formData.message}`;
 
-      // 3. OPEN WHATSAPP IN NEW TAB
       window.open(`https://wa.me/917063363898?text=${waText}`, '_blank');
 
       setIsSuccess(true);
     } catch (error) {
       console.error('Submission Error:', error);
-      setIsSuccess(true);
+      alert('Firestore Error: ' + error.message + '. Please check if Firestore Rules allow writes.');
+      setIsSuccess(false);
     } finally {
       setIsSubmitting(false);
     }
