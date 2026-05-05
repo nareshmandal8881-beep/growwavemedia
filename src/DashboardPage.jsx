@@ -5,6 +5,16 @@ import {
   Search, RefreshCw, ChevronRight, Filter, Trash2 
 } from 'lucide-react';
 
+import { db } from './firebase';
+import { 
+  collection, 
+  getDocs, 
+  deleteDoc, 
+  doc, 
+  query, 
+  orderBy 
+} from 'firebase/firestore';
+
 export default function DashboardPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,9 +37,13 @@ export default function DashboardPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('https://sheetdb.io/api/v1/myhiyvk7r2sy9');
-      const json = await res.json();
-      setData(json.reverse());
+      const q = query(collection(db, 'leads'), orderBy('Timestamp', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const leads = [];
+      querySnapshot.forEach((doc) => {
+        leads.push({ id: doc.id, ...doc.data() });
+      });
+      setData(leads);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
@@ -42,25 +56,14 @@ export default function DashboardPage() {
     navigate('/wavelogin');
   };
 
-  const handleDelete = async (email) => {
-    if (!window.confirm(`Are you sure you want to delete lead with email: ${email}?`)) return;
+  const handleDelete = async (id) => {
+    if (!window.confirm(`Are you sure you want to delete this lead?`)) return;
     
     setLoading(true);
     try {
-      const res = await fetch(`https://sheetdb.io/api/v1/myhiyvk7r2sy9/Email/${email}`, {
-        method: 'DELETE',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-      const result = await res.json();
-      if (result.deleted > 0) {
-        alert('Lead deleted successfully!');
-        fetchData();
-      } else {
-        alert('Error deleting lead or lead not found.');
-      }
+      await deleteDoc(doc(db, 'leads', id));
+      alert('Lead deleted successfully!');
+      fetchData();
     } catch (err) {
       console.error('Delete error:', err);
       alert('Failed to delete lead.');
@@ -144,7 +147,7 @@ export default function DashboardPage() {
           {loading ? (
             <div className="dash-loader">
               <div className="spinner"></div>
-              <p>Fetching data from Google Sheets...</p>
+              <p>Fetching data from Firebase...</p>
             </div>
           ) : filteredData.length === 0 ? (
             <div className="dash-empty">
@@ -213,7 +216,7 @@ export default function DashboardPage() {
                           </button>
                           <button 
                             className="row-delete-btn" 
-                            onClick={() => handleDelete(row.Email)}
+                            onClick={() => handleDelete(row.id)}
                             title="Delete Lead"
                           >
                             <Trash2 size={18} />

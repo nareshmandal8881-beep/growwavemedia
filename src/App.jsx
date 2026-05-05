@@ -33,6 +33,9 @@ import brandImages from './assets/logo/images.png';
 import brandJar from './assets/logo/jar-app-logo-png_seeklogo-543025.png';
 import brandPocket from './assets/logo/pocketoption.svg';
 
+import { db } from './firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
 const tickerItems = [
   'Social Media Marketing',
   'IT Startup Growth',
@@ -150,35 +153,27 @@ export default function App() {
     const { name, email, phone, service, message } = formData;
 
     try {
-      // 1. SAVE TO GOOGLE SHEET
-      await fetch('https://sheetdb.io/api/v1/myhiyvk7r2sy9', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          data: [{
-            Date: new Date().toLocaleString(),
-            Type: 'Contact Enquiry',
-            Name: name,
-            Email: email,
-            Phone: phone || 'N/A',
-            Handle_Company: 'N/A',
-            Niche_Website: service || 'N/A',
-            Followers: 'N/A',
-            Message: message,
-            YT_Name: 'N/A',
-            YT_Link: 'N/A',
-            YT_Subs: 'N/A',
-            IG_Handle: 'N/A',
-            IG_Link: 'N/A',
-            IG_Followers: 'N/A',
-            FB_Name: 'N/A',
-            FB_Link: 'N/A',
-            FB_Followers: 'N/A'
-          }]
-        })
+      // 1. SAVE TO FIREBASE
+      await addDoc(collection(db, 'leads'), {
+        Date: new Date().toLocaleString(),
+        Timestamp: serverTimestamp(),
+        Type: 'Contact Enquiry',
+        Name: name,
+        Email: email,
+        Phone: phone || 'N/A',
+        Handle_Company: 'N/A',
+        Niche_Website: service || 'N/A',
+        Followers: 'N/A',
+        Message: message,
+        YT_Name: 'N/A',
+        YT_Link: 'N/A',
+        YT_Subs: 'N/A',
+        IG_Handle: 'N/A',
+        IG_Link: 'N/A',
+        IG_Followers: 'N/A',
+        FB_Name: 'N/A',
+        FB_Link: 'N/A',
+        FB_Followers: 'N/A'
       });
 
       // 2. PREPARE WHATSAPP

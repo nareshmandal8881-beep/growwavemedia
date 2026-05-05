@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Briefcase, Send, CheckCircle2, TrendingUp } from 'lucide-react';
+import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function EnrollmentModal({ isOpen, onClose }) {
   const [step, setStep] = useState('selection'); // 'selection' | 'form'
@@ -64,40 +65,33 @@ export default function EnrollmentModal({ isOpen, onClose }) {
     setIsSubmitting(true);
 
     try {
-      // 1. SAVE TO GOOGLE SHEET (Using SheetDB as a bridge)
-      const sheetResponse = await fetch('https://sheetdb.io/api/v1/myhiyvk7r2sy9', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          data: [
-            {
-              Date: new Date().toLocaleString(),
-              Type: userType,
-              Name: formData.name,
-              Email: formData.email,
-              Phone: formData.phone,
-              Handle_Company: formData.igHandle || formData.company || 'N/A',
-              Niche_Website: formData.niche || formData.website || 'N/A',
-              Followers: formData.igFollowers || 'N/A',
-              Message: formData.message,
-              // YT
-              YT_Name: formData.ytName || 'N/A',
-              YT_Link: formData.ytLink || 'N/A',
-              YT_Subs: formData.ytSubs || 'N/A',
-              // IG
-              IG_Handle: formData.igHandle || 'N/A',
-              IG_Link: formData.igLink || 'N/A',
-              IG_Followers: formData.igFollowers || 'N/A',
-              // FB
-              FB_Name: formData.fbName || 'N/A',
-              FB_Link: formData.fbLink || 'N/A',
-              FB_Followers: formData.fbFollowers || 'N/A'
-            }
-          ]
-        })
+      // 1. SAVE TO FIREBASE
+      await addDoc(collection(db, 'leads'), {
+        Date: new Date().toLocaleString(),
+        Timestamp: serverTimestamp(),
+        Type: userType,
+        Name: formData.name,
+        Email: formData.email,
+        Phone: formData.phone,
+        Handle_Company: formData.igHandle || formData.company || 'N/A',
+        Niche_Website: formData.niche || formData.website || 'N/A',
+        Followers: formData.igFollowers || 'N/A',
+        Message: formData.message,
+        // YT
+        YT_Name: formData.ytName || 'N/A',
+        YT_Link: formData.ytLink || 'N/A',
+        YT_Subs: formData.ytSubs || 'N/A',
+        // IG
+        IG_Handle: formData.igHandle || 'N/A',
+        IG_Link: formData.igLink || 'N/A',
+        IG_Followers: formData.igFollowers || 'N/A',
+        // FB
+        FB_Name: formData.fbName || 'N/A',
+        FB_Link: formData.fbLink || 'N/A',
+        FB_Followers: formData.fbFollowers || 'N/A',
+        // Specifics for Brand if needed (redundant but matches schema)
+        Company: formData.company || 'N/A',
+        Website: formData.website || 'N/A'
       });
 
       // 2. PREPARE WHATSAPP MESSAGE
@@ -130,11 +124,7 @@ export default function EnrollmentModal({ isOpen, onClose }) {
       // 3. OPEN WHATSAPP IN NEW TAB
       window.open(`https://wa.me/917063363898?text=${waText}`, '_blank');
 
-      if (sheetResponse.ok) {
-        setIsSuccess(true);
-      } else {
-        setIsSuccess(true); 
-      }
+      setIsSuccess(true);
     } catch (error) {
       console.error('Submission Error:', error);
       setIsSuccess(true);
