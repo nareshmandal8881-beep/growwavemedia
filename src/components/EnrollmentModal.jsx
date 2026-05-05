@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { X, User, Briefcase, Send, CheckCircle2, TrendingUp } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
