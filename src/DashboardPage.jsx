@@ -191,6 +191,26 @@ function CreatorsPanel() {
   const [form, setForm] = useState({ name:'', email:'', phone:'', platform:'', paymentDetails:'', password:'' });
   const [saving, setSaving] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
+  const [updating, setUpdating] = useState(false);
+
+  const handleUpdateCreator = async () => {
+    setUpdating(true);
+    try {
+      await updateDoc(doc(db, 'portal_creators', selectedCreator.id), {
+        name: selectedCreator.name || '',
+        phone: selectedCreator.phone || '',
+        platform: selectedCreator.platform || '',
+        paymentDetails: selectedCreator.paymentDetails || ''
+      });
+      setCreators(prev => prev.map(c => c.id === selectedCreator.id ? selectedCreator : c));
+      alert('Creator details updated successfully!');
+      setSelectedCreator(null);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const fetchCreators = async () => {
     setLoading(true);
@@ -276,28 +296,48 @@ function CreatorsPanel() {
         <div className="dash-modal-overlay" onClick={() => setSelectedCreator(null)}>
           <div className="dash-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-top">
-              <h2>Creator Profile</h2>
+              <h2>Edit Creator Profile</h2>
               <button className="close-btn" onClick={() => setSelectedCreator(null)}>&times;</button>
             </div>
             <div className="modal-body">
               <div className="detail-section">
                 <label>Basic Information</label>
-                <div className="detail-grid">
-                  <div className="detail-item"><span>Name:</span> {selectedCreator.name}</div>
-                  <div className="detail-item"><span>Email:</span> {selectedCreator.email}</div>
-                  <div className="detail-item"><span>Phone:</span> {selectedCreator.phone || 'N/A'}</div>
-                  <div className="detail-item"><span>Platform:</span> {selectedCreator.platform || 'N/A'}</div>
+                <div className="admin-form-grid" style={{marginTop: '1rem'}}>
+                  <div className="portal-field">
+                    <label>Name</label>
+                    <input type="text" value={selectedCreator.name || ''} onChange={e => setSelectedCreator({...selectedCreator, name: e.target.value})} />
+                  </div>
+                  <div className="portal-field">
+                    <label>Email (Cannot Edit)</label>
+                    <input type="email" value={selectedCreator.email || ''} disabled style={{opacity: 0.5}} />
+                  </div>
+                  <div className="portal-field">
+                    <label>Phone</label>
+                    <input type="tel" value={selectedCreator.phone || ''} onChange={e => setSelectedCreator({...selectedCreator, phone: e.target.value})} placeholder="+91..." />
+                  </div>
+                  <div className="portal-field">
+                    <label>Platform (e.g. YouTube, Instagram)</label>
+                    <input type="text" value={selectedCreator.platform || ''} onChange={e => setSelectedCreator({...selectedCreator, platform: e.target.value})} placeholder="Instagram" />
+                  </div>
                 </div>
               </div>
               <div className="detail-section">
                 <label>Payment Information</label>
-                <div className="message-box" style={{fontFamily:'monospace', padding:'1rem', background:'rgba(0,0,0,0.2)'}}>
-                  {selectedCreator.paymentDetails || 'No payment details provided.'}
+                <div className="portal-field" style={{marginTop: '1rem'}}>
+                  <textarea 
+                    rows="3" 
+                    value={selectedCreator.paymentDetails || ''} 
+                    onChange={e => setSelectedCreator({...selectedCreator, paymentDetails: e.target.value})}
+                    placeholder="Bank details or UPI..."
+                  />
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
-              <button className="btn-close-modal" onClick={() => setSelectedCreator(null)}>Close</button>
+            <div className="modal-footer" style={{display:'flex', gap:'1rem'}}>
+              <button className="portal-btn portal-btn--primary" onClick={handleUpdateCreator} disabled={updating}>
+                {updating ? 'Saving...' : 'Save Changes'}
+              </button>
+              <button className="btn-close-modal" onClick={() => setSelectedCreator(null)}>Cancel</button>
             </div>
           </div>
         </div>
