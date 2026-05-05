@@ -79,6 +79,10 @@ export default function EnrollmentModal({ isOpen, onClose }) {
               Name: formData.name,
               Email: formData.email,
               Phone: formData.phone,
+              Handle_Company: formData.igHandle || formData.company || 'N/A',
+              Niche_Website: formData.niche || formData.website || 'N/A',
+              Followers: formData.igFollowers || 'N/A',
+              Message: formData.message,
               // YT
               YT_Name: formData.ytName || 'N/A',
               YT_Link: formData.ytLink || 'N/A',
@@ -90,12 +94,7 @@ export default function EnrollmentModal({ isOpen, onClose }) {
               // FB
               FB_Name: formData.fbName || 'N/A',
               FB_Link: formData.fbLink || 'N/A',
-              FB_Followers: formData.fbFollowers || 'N/A',
-              // Brand/Other
-              Company: formData.company || 'N/A',
-              Website: formData.website || 'N/A',
-              Niche: formData.niche || 'N/A',
-              Message: formData.message
+              FB_Followers: formData.fbFollowers || 'N/A'
             }
           ]
         })

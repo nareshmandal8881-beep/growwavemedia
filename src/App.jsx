@@ -164,8 +164,19 @@ export default function App() {
             Name: name,
             Email: email,
             Phone: phone || 'N/A',
+            Handle_Company: 'N/A',
             Niche_Website: service || 'N/A',
-            Message: message
+            Followers: 'N/A',
+            Message: message,
+            YT_Name: 'N/A',
+            YT_Link: 'N/A',
+            YT_Subs: 'N/A',
+            IG_Handle: 'N/A',
+            IG_Link: 'N/A',
+            IG_Followers: 'N/A',
+            FB_Name: 'N/A',
+            FB_Link: 'N/A',
+            FB_Followers: 'N/A'
           }]
         })
       });
