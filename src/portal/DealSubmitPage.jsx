@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { FaYoutube, FaInstagram, FaFacebook, FaTwitter } from 'react-icons/fa';
 
-const STEPS = ['Content Proof', 'Bank Details', 'Digital Signature'];
+const STEPS = ['Content Proof', 'Billing Details', 'Digital Signature'];
 
 const PLATFORM_OPTIONS = [
   { value: 'youtube', label: 'YouTube', icon: <FaYoutube />, color: '#ff0000' },
@@ -57,7 +57,14 @@ export default function DealSubmitPage() {
   const [form, setForm] = useState({
     videoLink: '',
     timestamp: '',
-    paymentDetails: '',
+    channelName: '',
+    creatorAddress: '',
+    accountHolder: '',
+    bankName: '',
+    ifscCode: '',
+    accountNumber: '',
+    upiId: '',
+    billingPeriod: new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
   });
   const [errors, setErrors] = useState({});
 
@@ -79,7 +86,18 @@ export default function DealSubmitPage() {
           navigate('/portal/dashboard'); return;
         }
         setDeal(dealData);
-        setForm((f) => ({ ...f, paymentDetails: creatorData.paymentDetails || '' }));
+
+        // Pre-fill from creator profile
+        setForm((f) => ({
+          ...f,
+          channelName: creatorData.channelName || '',
+          creatorAddress: creatorData.creatorAddress || '',
+          accountHolder: creatorData.accountHolder || '',
+          bankName: creatorData.bankName || '',
+          ifscCode: creatorData.ifscCode || '',
+          accountNumber: creatorData.accountNumber || '',
+          upiId: creatorData.upiId || '',
+        }));
 
         // Set platform from deal if available
         if (dealData.platform) {
@@ -98,7 +116,13 @@ export default function DealSubmitPage() {
             ...f,
             videoLink: sub.videoLink || '',
             timestamp: sub.timestamp || '',
-            paymentDetails: sub.paymentDetails || f.paymentDetails,
+            channelName: sub.channelName || f.channelName,
+            creatorAddress: sub.creatorAddress || f.creatorAddress,
+            accountHolder: sub.accountHolder || f.accountHolder,
+            bankName: sub.bankName || f.bankName,
+            ifscCode: sub.ifscCode || f.ifscCode,
+            accountNumber: sub.accountNumber || f.accountNumber,
+            upiId: sub.upiId || f.upiId,
           }));
           if (sub.signatureData) setSigData(sub.signatureData);
           if (sub.uploadedVideoUrl) {
@@ -150,7 +174,11 @@ export default function DealSubmitPage() {
       }
     }
     if (step === 1) {
-      if (!form.paymentDetails.trim()) e.paymentDetails = 'Payment details are required';
+      if (!form.channelName.trim()) e.channelName = 'Channel Name is required';
+      if (!form.accountHolder.trim()) e.accountHolder = 'Account Holder Name is required';
+      if (!form.accountNumber.trim()) e.accountNumber = 'Account Number is required';
+      if (!form.bankName.trim()) e.bankName = 'Bank Name is required';
+      if (!form.ifscCode.trim()) e.ifscCode = 'IFSC Code is required';
     }
     if (step === 2) {
       if (!sigData) e.signature = 'Digital signature is mandatory';
@@ -200,7 +228,14 @@ export default function DealSubmitPage() {
         contentPlatform: selectedPlatform,
         uploadMode,
         timestamp: form.timestamp,
-        paymentDetails: form.paymentDetails,
+        channelName: form.channelName,
+        creatorAddress: form.creatorAddress,
+        accountHolder: form.accountHolder,
+        bankName: form.bankName,
+        ifscCode: form.ifscCode,
+        accountNumber: form.accountNumber,
+        upiId: form.upiId,
+        billingPeriod: form.billingPeriod,
         signatureData: sigData,
         amount: deal.amount || '',
         videoType: deal.videoType || '',
@@ -221,7 +256,13 @@ export default function DealSubmitPage() {
       });
 
       await updateDoc(doc(db, 'portal_creators', creator.id), {
-        paymentDetails: form.paymentDetails,
+        channelName: form.channelName,
+        creatorAddress: form.creatorAddress,
+        accountHolder: form.accountHolder,
+        bankName: form.bankName,
+        ifscCode: form.ifscCode,
+        accountNumber: form.accountNumber,
+        upiId: form.upiId,
       });
 
       // 4. GENERATE INVOICE FROM CREATOR SIDE
@@ -240,7 +281,14 @@ export default function DealSubmitPage() {
         utrId: '',
         adminProofUrl: '',
         signatureData: sigData,
-        paymentDetails: form.paymentDetails,
+        channelName: form.channelName,
+        creatorAddress: form.creatorAddress,
+        accountHolder: form.accountHolder,
+        bankName: form.bankName,
+        ifscCode: form.ifscCode,
+        accountNumber: form.accountNumber,
+        upiId: form.upiId,
+        billingPeriod: form.billingPeriod,
         status: 'pending_payment',
         date: new Date().toLocaleDateString('en-IN'),
         createdAt: serverTimestamp(),
@@ -451,23 +499,52 @@ export default function DealSubmitPage() {
             </div>
           )}
 
-          {/* ── Step 1 — Bank Details ── */}
+          {/* ── Step 1 — Billing Details ── */}
           {step === 1 && (
             <div className="portal-step-body">
-              <h2>Payment Details</h2>
+              <h2>Billing & Payment Details</h2>
               <p className="portal-step-desc">
-                Provide your bank or UPI details. This will be automatically added to your invoice.
+                Provide your official billing information for the invoice.
               </p>
-              <div className="portal-field" style={{ gridColumn: '1 / -1' }}>
-                <label>Bank Name, A/C No, Holder Name, IFSC, or UPI ID *</label>
-                <textarea
-                  name="paymentDetails"
-                  rows="5"
-                  value={form.paymentDetails}
-                  onChange={handleChange}
-                  placeholder={`e.g. Bank Name: HDFC\nAccount No: 123456789\nIFSC: HDFC0001234\nHolder Name: John Doe\nOR UPI ID: johndoe@upi`}
-                />
-                {errors.paymentDetails && <span className="portal-field-error">{errors.paymentDetails}</span>}
+              
+              <div className="portal-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="portal-field">
+                  <label>Channel Name *</label>
+                  <input name="channelName" value={form.channelName} onChange={handleChange} placeholder="e.g. I am Biswajit" />
+                  {errors.channelName && <span className="portal-field-error">{errors.channelName}</span>}
+                </div>
+                <div className="portal-field">
+                  <label>Billing Period</label>
+                  <input name="billingPeriod" value={form.billingPeriod} onChange={handleChange} placeholder="e.g. May 2026" />
+                </div>
+                <div className="portal-field" style={{ gridColumn: '1 / -1' }}>
+                  <label>Creator / Billing Address</label>
+                  <textarea name="creatorAddress" rows="2" value={form.creatorAddress} onChange={handleChange} placeholder="Assam, Sonitpur, Pin: 784507" />
+                </div>
+                <div className="portal-field">
+                  <label>Account Holder Name *</label>
+                  <input name="accountHolder" value={form.accountHolder} onChange={handleChange} placeholder="Full name as per bank" />
+                  {errors.accountHolder && <span className="portal-field-error">{errors.accountHolder}</span>}
+                </div>
+                <div className="portal-field">
+                  <label>Bank Name *</label>
+                  <input name="bankName" value={form.bankName} onChange={handleChange} placeholder="e.g. Bank of Baroda" />
+                  {errors.bankName && <span className="portal-field-error">{errors.bankName}</span>}
+                </div>
+                <div className="portal-field">
+                  <label>IFSC Code *</label>
+                  <input name="ifscCode" value={form.ifscCode} onChange={handleChange} placeholder="e.g. BARB0DHEKIA" className="portal-mono" />
+                  {errors.ifscCode && <span className="portal-field-error">{errors.ifscCode}</span>}
+                </div>
+                <div className="portal-field">
+                  <label>Account Number *</label>
+                  <input name="accountNumber" value={form.accountNumber} onChange={handleChange} placeholder="0000 0000 0000" className="portal-mono" />
+                  {errors.accountNumber && <span className="portal-field-error">{errors.accountNumber}</span>}
+                </div>
+                <div className="portal-field">
+                  <label>UPI ID (Optional)</label>
+                  <input name="upiId" value={form.upiId} onChange={handleChange} placeholder="johndoe@upi" />
+                </div>
               </div>
             </div>
           )}

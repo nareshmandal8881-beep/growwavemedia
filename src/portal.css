@@ -706,55 +706,200 @@
 }
 
 /* ── Invoice Page ── */
+.portal-invoice-layout {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.portal-invoice-doc {
+  background: #fff;
+  color: #1a1a1a;
+  padding: 4rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.inv-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #000;
+  padding-bottom: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.inv-brand__name {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+}
+
+.inv-brand__tag {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.inv-meta-table {
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+.inv-meta-table td {
+  padding: 0.2rem 0.5rem;
+}
+
+.inv-parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  margin-bottom: 3rem;
+}
+
+.inv-party__label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #000;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.4rem;
+}
+
+.inv-party__name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 0.4rem;
+}
+
+.inv-party p {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.6;
+}
+
+.inv-section {
+  margin-bottom: 2.5rem;
+}
+
+.inv-section__title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #000;
+  margin-bottom: 1.25rem;
+  background: #f8f8f8;
+  padding: 0.5rem 1rem;
+}
+
+.inv-items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inv-items-table th {
+  background: #000;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.inv-items-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.inv-total {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #000;
+}
+
+.inv-payment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.inv-payment-item {
+  margin-bottom: 0.75rem;
+}
+
+.inv-payment-item span {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #777;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+
+.inv-payment-item strong {
+  font-size: 0.95rem;
+  color: #000;
+}
+
+.inv-sig-section {
+  margin-top: 4rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.inv-sig-display {
+  text-align: center;
+  min-width: 200px;
+}
+
+.inv-sig-img {
+  max-width: 180px;
+  max-height: 70px;
+  margin-bottom: 0.5rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.inv-sig-line {
+  border-top: 1px solid #000;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.inv-sig-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.inv-sig-date {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.inv-footer {
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #888;
+}
+
 @media (max-width: 640px) {
-  .portal-invoice-layout {
-    padding: 1rem 0.75rem;
-  }
-
-  .portal-invoice-topbar {
-    margin-bottom: 1rem;
-  }
-
-  .portal-invoice-doc {
-    padding: 1.5rem 1rem;
-    border-radius: 4px;
-  }
-
-  .inv-header {
-    flex-direction: column;
-    gap: 1.5rem;
-    padding-bottom: 1.5rem;
-  }
-
-  .inv-brand__name {
-    font-size: 1.3rem;
-  }
-
-  .inv-badge {
-    text-align: left;
-    font-size: 1.5rem;
-  }
-
-  .inv-meta-table {
-    text-align: left;
-  }
-
-  .inv-parties {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .inv-payment-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .inv-items-table th,
-  .inv-items-table td {
-    padding: 0.6rem 0.5rem;
-    font-size: 0.85rem;
-  }
+  .inv-parties { grid-template-columns: 1fr; gap: 2rem; }
+  .inv-payment-grid { grid-template-columns: 1fr; }
+  .portal-invoice-doc { padding: 2rem 1.5rem; }
 }
 
 /* ── Small stat cards on very small screens ── */
