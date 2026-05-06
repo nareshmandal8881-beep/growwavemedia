@@ -191,31 +191,18 @@ export default function DealSubmitPage() {
     try {
       let finalVideoUrl = '';
 
-      const uploadSigFile = async () => {
+      const convertSigToBase64 = async () => {
         if (!sigFile) return uploadedSigUrl || '';
-        setSubTask('Uploading Signature...');
+        setSubTask('Processing Signature...');
         return new Promise((resolve, reject) => {
-          const storageRef = ref(storage, `creator_signatures/${id}/${Date.now()}_${sigFile.name}`);
-          const task = uploadBytesResumable(storageRef, sigFile);
-          task.on('state_changed',
-            (snap) => {
-              const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-              setSigUploadProgress(pct);
-              setSubTask(`Uploading Signature ${pct}%`);
-            },
-            (err) => {
-              console.error("Signature Upload Error:", err);
-              reject(err);
-            },
-            async () => {
-              const url = await getDownloadURL(task.snapshot.ref);
-              resolve(url);
-            }
-          );
+          const reader = new FileReader();
+          reader.readAsDataURL(sigFile);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
         });
       };
 
-      const finalSigUrl = await uploadSigFile();
+      const base64Sig = await convertSigToBase64();
 
       setSubTask('Saving Submission...');
       const subData = {
@@ -236,7 +223,7 @@ export default function DealSubmitPage() {
         accountNumber: form.accountNumber,
         upiId: form.upiId,
         billingPeriod: form.billingPeriod,
-        signatureUrl: finalSigUrl,
+        signatureData: base64Sig,
         amount: deal.amount || '',
         videoType: deal.videoType || '',
         status: 'submitted_video',

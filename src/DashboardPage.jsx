@@ -40,9 +40,21 @@ function LeadsPanel({ activeTab }) {
   useEffect(() => { fetchData(); }, []);
 
   const handleDelete = async (id) => {
+    if (!id) {
+      alert("Error: Missing ID for this lead.");
+      return;
+    }
     if (!window.confirm('Delete this lead?')) return;
-    await fetch(`${API_BASE}/leads/${id}`, { method: 'DELETE' });
-    fetchData();
+    try {
+      const res = await fetch(`${API_BASE}/leads/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        throw new Error('Failed to delete lead from server');
+      }
+      fetchData();
+    } catch (err) {
+      alert("Error deleting lead: " + err.message);
+      console.error(err);
+    }
   };
 
   const filtered = data.filter(row => {
