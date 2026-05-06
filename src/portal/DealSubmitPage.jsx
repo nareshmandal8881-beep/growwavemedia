@@ -8,7 +8,6 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Helmet } from 'react-helmet-async';
-import { Helmet } from 'react-helmet-async';
 import CommentThread from './components/CommentThread';
 import {
   Upload, CheckCircle2, ArrowLeft, ArrowRight,
