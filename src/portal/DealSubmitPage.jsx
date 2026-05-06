@@ -118,13 +118,13 @@ export default function DealSubmitPage() {
             ...f,
             videoLink: sub.videoLink || '',
             timestamp: sub.timestamp || '',
-            channelName: sub.channelName || f.channelName,
-            creatorAddress: sub.creatorAddress || f.creatorAddress,
-            accountHolder: sub.accountHolder || f.accountHolder,
-            bankName: sub.bankName || f.bankName,
-            ifscCode: sub.ifscCode || f.ifscCode,
-            accountNumber: sub.accountNumber || f.accountNumber,
-            upiId: sub.upiId || f.upiId,
+            channelName: sub.channelName || f.channelName || '',
+            creatorAddress: sub.creatorAddress || f.creatorAddress || '',
+            accountHolder: sub.accountHolder || f.accountHolder || '',
+            bankName: sub.bankName || f.bankName || '',
+            ifscCode: sub.ifscCode || f.ifscCode || '',
+            accountNumber: sub.accountNumber || f.accountNumber || '',
+            upiId: sub.upiId || f.upiId || '',
           }));
           if (sub.signatureUrl) {
             setUploadedSigUrl(sub.signatureUrl);

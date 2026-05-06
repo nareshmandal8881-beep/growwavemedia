@@ -19,7 +19,18 @@ export default function CreatorDashboard() {
   const [tab, setTab] = useState('deals');
   const [loading, setLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({ phone: '', channelName: '', youtubeLink: '', instagramLink: '', paymentDetails: '' });
+  const [profileForm, setProfileForm] = useState({ 
+    phone: '', 
+    channelName: '', 
+    youtubeLink: '', 
+    instagramLink: '', 
+    creatorAddress: '',
+    accountHolder: '',
+    bankName: '',
+    ifscCode: '',
+    accountNumber: '',
+    upiId: '' 
+  });
   const [savingProfile, setSavingProfile] = useState(false);
   const navigate = useNavigate();
 
@@ -39,7 +50,12 @@ export default function CreatorDashboard() {
           channelName: creatorData.channelName || '',
           youtubeLink: creatorData.youtubeLink || '',
           instagramLink: creatorData.instagramLink || '',
-          paymentDetails: creatorData.paymentDetails || ''
+          creatorAddress: creatorData.creatorAddress || '',
+          accountHolder: creatorData.accountHolder || '',
+          bankName: creatorData.bankName || '',
+          ifscCode: creatorData.ifscCode || '',
+          accountNumber: creatorData.accountNumber || '',
+          upiId: creatorData.upiId || ''
         });
 
         // Fetch assigned deals
@@ -86,7 +102,12 @@ export default function CreatorDashboard() {
         channelName: profileForm.channelName,
         youtubeLink: profileForm.youtubeLink,
         instagramLink: profileForm.instagramLink,
-        paymentDetails: profileForm.paymentDetails
+        creatorAddress: profileForm.creatorAddress,
+        accountHolder: profileForm.accountHolder,
+        bankName: profileForm.bankName,
+        ifscCode: profileForm.ifscCode,
+        accountNumber: profileForm.accountNumber,
+        upiId: profileForm.upiId
       });
       setCreator({ ...creator, ...profileForm });
       setIsEditingProfile(false);
@@ -344,13 +365,33 @@ export default function CreatorDashboard() {
                           <input type="url" value={profileForm.instagramLink} onChange={e => setProfileForm({...profileForm, instagramLink: e.target.value})} placeholder="https://instagram.com/username" />
                         </div>
                         <div className="portal-field" style={{ gridColumn: '1 / -1' }}>
-                          <label>UPI / Bank Details</label>
+                          <label>Billing Address</label>
                           <textarea 
-                            rows="3" 
-                            value={profileForm.paymentDetails} 
-                            onChange={e => setProfileForm({...profileForm, paymentDetails: e.target.value})}
-                            placeholder="Bank Name, A/C No, Holder Name, IFSC, UPI ID..."
+                            rows="2" 
+                            value={profileForm.creatorAddress} 
+                            onChange={e => setProfileForm({...profileForm, creatorAddress: e.target.value})}
+                            placeholder="Full address for invoice..."
                           />
+                        </div>
+                        <div className="portal-field">
+                          <label>Account Holder Name</label>
+                          <input type="text" value={profileForm.accountHolder} onChange={e => setProfileForm({...profileForm, accountHolder: e.target.value})} />
+                        </div>
+                        <div className="portal-field">
+                          <label>Bank Name</label>
+                          <input type="text" value={profileForm.bankName} onChange={e => setProfileForm({...profileForm, bankName: e.target.value})} />
+                        </div>
+                        <div className="portal-field">
+                          <label>IFSC Code</label>
+                          <input type="text" value={profileForm.ifscCode} onChange={e => setProfileForm({...profileForm, ifscCode: e.target.value})} />
+                        </div>
+                        <div className="portal-field">
+                          <label>Account Number</label>
+                          <input type="text" value={profileForm.accountNumber} onChange={e => setProfileForm({...profileForm, accountNumber: e.target.value})} />
+                        </div>
+                        <div className="portal-field">
+                          <label>UPI ID</label>
+                          <input type="text" value={profileForm.upiId} onChange={e => setProfileForm({...profileForm, upiId: e.target.value})} />
                         </div>
                         <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                           <button type="submit" className="portal-btn portal-btn--primary" disabled={savingProfile}>
@@ -372,25 +413,30 @@ export default function CreatorDashboard() {
                       </form>
                     ) : (
                       <>
-                        <div className="portal-profile-grid">
-                          {[
-                            ['Full Name', creator.name],
-                            ['Email', creator.email],
-                            ['Phone', creator.phone || '—'],
-                            ['Channel Name', creator.channelName || '—'],
-                            ['YouTube Link', creator.youtubeLink || '—'],
-                            ['Instagram Link', creator.instagramLink || '—'],
-                            ['UPI / Bank', creator.paymentDetails || '—'],
-                            ['Joined', creator.createdAt?.toDate
-                              ? creator.createdAt.toDate().toLocaleDateString('en-IN')
-                              : '—'],
-                          ].map(([label, val]) => (
-                            <div key={label} className="portal-profile-item">
-                              <span className="portal-profile-item__label">{label}</span>
-                              <span className="portal-profile-item__val" style={{wordBreak: 'break-all'}}>{val}</span>
-                            </div>
-                          ))}
-                        </div>
+                         <div className="portal-profile-grid">
+                           {[
+                             ['Full Name', creator.name],
+                             ['Email', creator.email],
+                             ['Phone', creator.phone || '—'],
+                             ['Channel Name', creator.channelName || '—'],
+                             ['YouTube Link', creator.youtubeLink || '—'],
+                             ['Instagram Link', creator.instagramLink || '—'],
+                             ['Billing Address', creator.creatorAddress || '—'],
+                             ['Account Holder', creator.accountHolder || '—'],
+                             ['Bank Name', creator.bankName || '—'],
+                             ['IFSC Code', creator.ifscCode || '—'],
+                             ['A/C Number', creator.accountNumber || '—'],
+                             ['UPI ID', creator.upiId || '—'],
+                             ['Joined', creator.createdAt?.toDate
+                               ? creator.createdAt.toDate().toLocaleDateString('en-IN')
+                               : '—'],
+                           ].map(([label, val]) => (
+                             <div key={label} className="portal-profile-item">
+                               <span className="portal-profile-item__label">{label}</span>
+                               <span className="portal-profile-item__val" style={{wordBreak: 'break-all'}}>{val}</span>
+                             </div>
+                           ))}
+                         </div>
                         <p className="portal-profile-note" style={{ marginTop: '2rem' }}>
                           Need to change your name or email? Contact admin at{' '}
                           <a href="mailto:growwavemedia@gmail.com">growwavemedia@gmail.com</a>

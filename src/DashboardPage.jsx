@@ -635,13 +635,20 @@ function SubmissionsPanel() {
                       <div className="portal-review-row"><span>Timestamp</span><strong>{sub.timestamp}</strong></div>
                     </div>
                     <div className="portal-review-section">
-                      <h4>Payment Details (Creator)</h4>
+                      <h4>Billing & Payment (Creator)</h4>
+                      <div className="portal-review-row"><span>Channel Name</span><strong>{sub.channelName || '—'}</strong></div>
+                      <div className="portal-review-row"><span>Billing Address</span><em style={{fontSize:'0.8rem'}}>{sub.creatorAddress || '—'}</em></div>
+                      <div className="portal-review-row"><span>Account Holder</span><strong>{sub.accountHolder || '—'}</strong></div>
+                      <div className="portal-review-row"><span>Bank Name</span><strong>{sub.bankName || '—'}</strong></div>
+                      <div className="portal-review-row"><span>IFSC Code</span><strong className="portal-mono">{sub.ifscCode || '—'}</strong></div>
+                      <div className="portal-review-row"><span>A/C Number</span><strong className="portal-mono">{sub.accountNumber || '—'}</strong></div>
+                      <div className="portal-review-row"><span>UPI ID</span><strong>{sub.upiId || '—'}</strong></div>
                       <div className="portal-review-row"><span>Amount</span><strong>₹{Number(sub.amount||0).toLocaleString('en-IN')}</strong></div>
-                      <div className="portal-review-row"><span>Bank / UPI</span><em style={{whiteSpace:'pre-wrap'}}>{sub.paymentDetails || '—'}</em></div>
-                      {sub.signatureData && (
-                        <div className="portal-review-row">
+                      
+                      {(sub.signatureUrl || sub.signatureData) && (
+                        <div className="portal-review-row" style={{marginTop:'1rem'}}>
                           <span>Signature</span>
-                          <img src={sub.signatureData} alt="Signature" style={{maxHeight:'60px', background:'#fff', padding:'4px', borderRadius:'4px'}} />
+                          <img src={sub.signatureUrl || sub.signatureData} alt="Signature" style={{maxHeight:'60px', background:'#fff', padding:'4px', borderRadius:'4px'}} />
                         </div>
                       )}
                     </div>
