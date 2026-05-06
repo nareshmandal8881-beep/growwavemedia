@@ -8,7 +8,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Helmet } from 'react-helmet-async';
-import SignatureCanvas from './components/SignatureCanvas';
+import { Helmet } from 'react-helmet-async';
 import CommentThread from './components/CommentThread';
 import {
   Upload, CheckCircle2, ArrowLeft, ArrowRight,
@@ -52,7 +52,10 @@ export default function DealSubmitPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState('');
 
-  const [sigData, setSigData] = useState(null);
+  const [sigFile, setSigFile] = useState(null);
+  const [sigPreview, setSigPreview] = useState(null);
+  const [sigUploadProgress, setSigUploadProgress] = useState(0);
+  const [uploadedSigUrl, setUploadedSigUrl] = useState('');
 
   const [form, setForm] = useState({
     videoLink: '',
@@ -124,7 +127,10 @@ export default function DealSubmitPage() {
             accountNumber: sub.accountNumber || f.accountNumber,
             upiId: sub.upiId || f.upiId,
           }));
-          if (sub.signatureData) setSigData(sub.signatureData);
+          if (sub.signatureUrl) {
+            setUploadedSigUrl(sub.signatureUrl);
+            setSigPreview(sub.signatureUrl);
+          }
           if (sub.uploadedVideoUrl) {
             setUploadedVideoUrl(sub.uploadedVideoUrl);
             setUploadMode('file');
@@ -147,12 +153,28 @@ export default function DealSubmitPage() {
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    setVideoFile(file);
-    setErrors((e) => ({ ...e, videoFile: '' }));
-    // Create object URL for preview
-    const url = URL.createObjectURL(file);
-    setVideoFilePreview(url);
+    if (file) {
+      if (file.size > 500 * 1024 * 1024) {
+        alert('Video file is too large (max 500MB)');
+        return;
+      }
+      setVideoFile(file);
+      setVideoFilePreview(URL.createObjectURL(file));
+      setUploadedVideoUrl('');
+    }
+  };
+
+  const handleSigSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 50 * 1024) {
+        alert('Signature file must be under 50 KB');
+        return;
+      }
+      setSigFile(file);
+      setSigPreview(URL.createObjectURL(file));
+      setUploadedSigUrl('');
+    }
   };
 
   const clearFile = () => {
@@ -181,7 +203,7 @@ export default function DealSubmitPage() {
       if (!form.ifscCode.trim()) e.ifscCode = 'IFSC Code is required';
     }
     if (step === 2) {
-      if (!sigData) e.signature = 'Digital signature is mandatory';
+      if (!sigFile && !uploadedSigUrl) e.signature = 'Signature upload is mandatory';
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -218,6 +240,27 @@ export default function DealSubmitPage() {
         finalVideoUrl = await uploadVideoFile();
       }
 
+      const uploadSigFile = async () => {
+        if (!sigFile) return uploadedSigUrl || '';
+        return new Promise((resolve, reject) => {
+          const storageRef = ref(storage, `creator_signatures/${id}/${Date.now()}_${sigFile.name}`);
+          const task = uploadBytesResumable(storageRef, sigFile);
+          task.on('state_changed',
+            (snap) => {
+              const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+              setSigUploadProgress(pct);
+            },
+            reject,
+            async () => {
+              const url = await getDownloadURL(task.snapshot.ref);
+              resolve(url);
+            }
+          );
+        });
+      };
+
+      const finalSigUrl = await uploadSigFile();
+
       const subData = {
         dealId: id,
         dealTitle: deal.title,
@@ -236,7 +279,7 @@ export default function DealSubmitPage() {
         accountNumber: form.accountNumber,
         upiId: form.upiId,
         billingPeriod: form.billingPeriod,
-        signatureData: sigData,
+        signatureUrl: finalSigUrl,
         amount: deal.amount || '',
         videoType: deal.videoType || '',
         status: 'submitted_video',
@@ -280,7 +323,7 @@ export default function DealSubmitPage() {
         platform: selectedPlatform,
         utrId: '',
         adminProofUrl: '',
-        signatureData: sigData,
+        signatureUrl: finalSigUrl,
         channelName: form.channelName,
         creatorAddress: form.creatorAddress,
         accountHolder: form.accountHolder,
@@ -549,21 +592,48 @@ export default function DealSubmitPage() {
             </div>
           )}
 
-          {/* ── Step 2 — Digital Signature ── */}
+          {/* ── Step 2 — Upload Signature ── */}
           {step === 2 && (
             <div className="portal-step-body">
-              <h2>Digital Signature</h2>
+              <h2>Upload Signature</h2>
               <p className="portal-step-desc">
-                Please draw your signature below. This will be attached to your invoice once payment is received.
+                Please upload a clear image of your signature (Max 50 KB). 
+                You can sign on paper and take a photo.
               </p>
-              <div style={{ marginTop: '1rem', border: errors.signature ? '2px solid red' : 'none', borderRadius: '8px' }}>
-                <SignatureCanvas onSignature={setSigData} />
+              
+              <div className="portal-field" style={{ marginTop: '1.5rem' }}>
+                <div 
+                  className="video-dropzone" 
+                  onClick={() => document.getElementById('sigFileInput').click()}
+                  style={{ minHeight: '150px', borderStyle: 'dashed' }}
+                >
+                  {sigPreview ? (
+                    <img src={sigPreview} alt="Signature Preview" style={{ maxHeight: '100px', maxWidth: '100%' }} />
+                  ) : (
+                    <>
+                      <Upload size={32} style={{ color: 'var(--portal-muted)', marginBottom: '0.5rem' }} />
+                      <p style={{ fontWeight: 600 }}>Click to upload signature</p>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--portal-muted)' }}>PNG, JPG — Max 50 KB</p>
+                    </>
+                  )}
+                  <input
+                    id="sigFileInput"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleSigSelect}
+                  />
+                </div>
+                {errors.signature && <span className="portal-field-error">{errors.signature}</span>}
+                
+                {sigUploadProgress > 0 && sigUploadProgress < 100 && (
+                  <div className="upload-progress-bar" style={{ marginTop: '1rem' }}>
+                    <div className="upload-progress-fill" style={{ width: `${sigUploadProgress}%` }} />
+                    <span>Uploading Signature…</span>
+                  </div>
+                )}
               </div>
-              {errors.signature && (
-                <span className="portal-field-error" style={{ display: 'block', marginTop: '0.5rem' }}>
-                  {errors.signature}
-                </span>
-              )}
+
               {existingSubId && (
                 <div className="portal-alert portal-alert--info" style={{ marginTop: '2rem' }}>
                   You have a previous submission. This will overwrite it.

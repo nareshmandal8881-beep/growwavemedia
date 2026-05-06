@@ -207,8 +207,8 @@ export default function InvoiceView() {
             
             <div className="inv-sig-section">
               <div className="inv-sig-display">
-                {invoice.signatureData && (
-                  <img src={invoice.signatureData} alt="Authorized Signature" className="inv-sig-img" />
+                {(invoice.signatureUrl || invoice.signatureData) && (
+                  <img src={invoice.signatureUrl || invoice.signatureData} alt="Authorized Signature" className="inv-sig-img" />
                 )}
                 <div className="inv-sig-line">
                   <div className="inv-sig-name">Authorized Signature</div>
