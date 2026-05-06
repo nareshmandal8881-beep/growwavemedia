@@ -296,7 +296,7 @@ function CreatorsPanel() {
             <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Channel Name</th><th>Action</th></tr></thead>
             <tbody>
               {creators.map(c => (
-                <tr key={c.id}>
+                <tr key={c._id}>
                   <td><div className="row-name">{c.name}</div></td>
                   <td><div className="row-email">{c.email}</div></td>
                   <td><div className="row-phone">{c.phone || '—'}</div></td>
@@ -462,7 +462,7 @@ function DealsPanel() {
             <div className="portal-field"><label>Assign Creator *</label>
               <select value={form.creatorId} required onChange={e => setForm(p=>({...p,creatorId:e.target.value}))}>
                 <option value="">Select creator…</option>
-                {creators.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {creators.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
               </select>
             </div>
             <div className="portal-field"><label>Platform</label>
@@ -501,7 +501,7 @@ function DealsPanel() {
             <thead><tr><th>Title</th><th>Creator</th><th>Video Type</th><th>Amount</th><th>Deadline</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
               {deals.map(d => (
-                <tr key={d.id}>
+                <tr key={d._id}>
                   <td><div className="row-name">{d.title}</div></td>
                   <td><div>{d.creatorName}</div></td>
                   <td><div>{d.videoType || '—'}</div></td>
@@ -510,9 +510,9 @@ function DealsPanel() {
                   <td><StatusBadge status={d.status}/></td>
                   <td style={{display: 'flex', gap: '0.5rem'}}>
                     {d.status === 'locked' && (
-                      <button className="portal-btn portal-btn--sm portal-btn--primary" onClick={() => handleApproveDeal(d.id)}>Approve</button>
+                      <button className="portal-btn portal-btn--sm portal-btn--primary" onClick={() => handleApproveDeal(d._id)}>Approve</button>
                     )}
-                    <button className="row-delete-btn" onClick={() => handleDelete(d.id)}><Trash2 size={16}/></button>
+                    <button className="row-delete-btn" onClick={() => handleDelete(d._id)}><Trash2 size={16}/></button>
                   </td>
                 </tr>
               ))}
