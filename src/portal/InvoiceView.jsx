@@ -16,13 +16,15 @@ export default function InvoiceView() {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const API_BASE = 'http://localhost:5000/api';
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       setLoading(true);
       try {
-        const invDoc = await getDoc(doc(db, 'portal_invoices', id));
-        if (!invDoc.exists()) { navigate('/portal/dashboard'); return; }
-        const data = { id: invDoc.id, ...invDoc.data() };
+        const res = await fetch(`${API_BASE}/invoices/${id}`);
+        if (!res.ok) { navigate('/portal/dashboard'); return; }
+        const data = await res.json();
         setInvoice(data);
       } catch (err) {
         console.error(err);

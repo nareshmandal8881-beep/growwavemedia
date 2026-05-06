@@ -153,44 +153,24 @@ export default function App() {
     const { name, email, phone, service, message } = formData;
 
     try {
-      // 1. SAVE TO FIREBASE
-      await addDoc(collection(db, 'leads'), {
-        Date: new Date().toLocaleString(),
-        Timestamp: serverTimestamp(),
-        Type: 'Contact Enquiry',
-        Name: name,
-        Email: email,
-        Phone: phone || 'N/A',
-        Handle_Company: 'N/A',
-        Niche_Website: service || 'N/A',
-        Followers: 'N/A',
-        Message: message,
-        YT_Name: 'N/A',
-        YT_Link: 'N/A',
-        YT_Subs: 'N/A',
-        IG_Handle: 'N/A',
-        IG_Link: 'N/A',
-        IG_Followers: 'N/A',
-        FB_Name: 'N/A',
-        FB_Link: 'N/A',
-        FB_Followers: 'N/A'
+      // 1. SAVE TO MONGODB VIA API
+      await fetch('http://localhost:5000/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'contact_form',
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+          website: formData.service || 'General'
+        })
       });
 
-      // 2. PREPARE WHATSAPP
-      const text =
-        `*New Enquiry — Grow Wave Media*%0A%0A` +
-        `*Name:* ${name}%0A` +
-        `*Email:* ${email}%0A` +
-        `*Phone:* ${phone || 'Not provided'}%0A` +
-        `*Service:* ${service || 'Not specified'}%0A%0A` +
-        `*Message:*%0A${message}`;
-
-      window.open(`https://wa.me/917063363898?text=${text}`, '_blank');
       setStatus('success');
       setFormData({ name: '', email: '', phone: '', service: '', message: '' });
-    } catch (error) {
-      console.error('Contact Error:', error);
-      alert('Firestore Error: ' + error.message + '. Please check if Firestore Rules allow writes.');
+    } catch (err) {
+      console.error(err);
       setStatus('error');
     }
   };

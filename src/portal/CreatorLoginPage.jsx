@@ -19,16 +19,18 @@ export default function CreatorLoginPage() {
     setLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, form.email, form.password);
-      // Verify creator exists in portal_creators
-      const q = query(collection(db, 'portal_creators'), where('uid', '==', cred.user.uid));
-      const snap = await getDocs(q);
-      if (snap.empty) {
-        // Auto-heal: If user exists in Auth but the Firestore doc failed to create earlier (e.g. due to permissions)
-        await addDoc(collection(db, 'portal_creators'), {
-          uid: cred.user.uid,
-          name: cred.user.displayName || cred.user.email.split('@')[0],
-          email: cred.user.email,
-          createdAt: new Date(),
+      // Verify creator exists in MongoDB
+      const res = await fetch(`http://localhost:5000/api/creators/uid/${cred.user.uid}`);
+      if (!res.ok) {
+        // Auto-heal: If user exists in Auth but MongoDB doc is missing
+        await fetch('http://localhost:5000/api/creators', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: cred.user.uid,
+            name: cred.user.displayName || cred.user.email.split('@')[0],
+            email: cred.user.email,
+          })
         });
       }
       navigate('/portal/dashboard');

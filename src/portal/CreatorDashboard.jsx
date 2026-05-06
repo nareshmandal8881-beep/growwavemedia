@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-import {
-  collection, query, where, getDocs, orderBy, doc, updateDoc
-} from 'firebase/firestore';
+const API_BASE = 'http://localhost:5000/api';
 import { Helmet } from 'react-helmet-async';
 import StatusBadge from './components/StatusBadge';
 import {
@@ -39,11 +37,10 @@ export default function CreatorDashboard() {
       if (!user) { navigate('/portal/login'); return; }
       setLoading(true);
       try {
-        // Fetch creator profile
-        const cq = query(collection(db, 'portal_creators'), where('uid', '==', user.uid));
-        const csnap = await getDocs(cq);
-        if (csnap.empty) { await signOut(auth); navigate('/portal/login'); return; }
-        const creatorData = { id: csnap.docs[0].id, ...csnap.docs[0].data() };
+        // 1. Fetch creator profile from MongoDB
+        const cres = await fetch(`${API_BASE}/creators/uid/${user.uid}`);
+        if (!cres.ok) { await signOut(auth); navigate('/portal/login'); return; }
+        const creatorData = await cres.json();
         setCreator(creatorData);
         setProfileForm({
           phone: creatorData.phone || '',
@@ -58,29 +55,22 @@ export default function CreatorDashboard() {
           upiId: creatorData.upiId || ''
         });
 
-        // Fetch assigned deals
-        const dq = query(
-          collection(db, 'portal_deals'),
-          where('creatorId', '==', creatorData.id)
-        );
-        const dsnap = await getDocs(dq);
-        const fetchedDeals = dsnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        // Sort in JS instead of Firestore query to avoid requiring composite indexes
-        fetchedDeals.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-        setDeals(fetchedDeals);
+        // 2. Fetch assigned deals from MongoDB
+        const dres = await fetch(`${API_BASE}/deals/creator/${creatorData._id}`);
+        if (dres.ok) {
+          const fetchedDeals = await dres.json();
+          setDeals(fetchedDeals);
+        }
 
-        // Fetch invoices
-        const iq = query(
-          collection(db, 'portal_invoices'),
-          where('creatorId', '==', creatorData.id)
-        );
-        const isnap = await getDocs(iq);
-        const fetchedInvoices = isnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        fetchedInvoices.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-        setInvoices(fetchedInvoices);
+        // 3. Fetch invoices from MongoDB
+        const ires = await fetch(`${API_BASE}/invoices/creator/${creatorData._id}`);
+        if (ires.ok) {
+          const fetchedInvoices = await ires.json();
+          setInvoices(fetchedInvoices);
+        }
       } catch (err) {
         console.error(err);
-        alert("Error fetching data: " + err.message); // Added this to see if it's a permission issue or index issue
+        alert("Error fetching data: " + err.message);
       } finally {
         setLoading(false);
       }
@@ -97,19 +87,14 @@ export default function CreatorDashboard() {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      await updateDoc(doc(db, 'portal_creators', creator.id), {
-        phone: profileForm.phone,
-        channelName: profileForm.channelName,
-        youtubeLink: profileForm.youtubeLink,
-        instagramLink: profileForm.instagramLink,
-        creatorAddress: profileForm.creatorAddress,
-        accountHolder: profileForm.accountHolder,
-        bankName: profileForm.bankName,
-        ifscCode: profileForm.ifscCode,
-        accountNumber: profileForm.accountNumber,
-        upiId: profileForm.upiId
+      const res = await fetch(`${API_BASE}/creators/${creator._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileForm)
       });
-      setCreator({ ...creator, ...profileForm });
+      if (!res.ok) throw new Error('Failed to update profile');
+      const updatedCreator = await res.json();
+      setCreator(updatedCreator);
       setIsEditingProfile(false);
       alert('Profile updated successfully!');
     } catch (err) {
@@ -243,7 +228,7 @@ export default function CreatorDashboard() {
                             )}
                             {deal.status === 'approved' && (
                               <Link
-                                to={`/portal/deal/${deal.id}`}
+                                to={`/portal/deal/${deal._id}`}
                                 className="portal-btn portal-btn--primary"
                               >
                                 Submit Video →
@@ -256,7 +241,7 @@ export default function CreatorDashboard() {
                             )}
                             {deal.status === 'rejected' && (
                               <Link
-                                to={`/portal/deal/${deal.id}`}
+                                to={`/portal/deal/${deal._id}`}
                                 className="portal-btn portal-btn--danger"
                               >
                                 Resubmit Video →
@@ -299,7 +284,7 @@ export default function CreatorDashboard() {
                         </thead>
                         <tbody>
                           {invoices.map((inv) => (
-                            <tr key={inv.id}>
+                            <tr key={inv._id}>
                               <td className="portal-mono">{inv.invoiceId}</td>
                               <td>{inv.dealTitle}</td>
                               <td>₹{Number(inv.amount || 0).toLocaleString('en-IN')}</td>
@@ -307,7 +292,7 @@ export default function CreatorDashboard() {
                               <td><StatusBadge status={inv.status} /></td>
                               <td>
                                 <Link
-                                  to={`/portal/invoice/${inv.id}`}
+                                  to={`/portal/invoice/${inv._id}`}
                                   className="portal-btn portal-btn--sm portal-btn--ghost"
                                 >
                                   {inv.status === 'pending_signature' ? 'Sign Now' : 'View'}

@@ -66,33 +66,31 @@ export default function EnrollmentModal({ isOpen, onClose }) {
     setIsSubmitting(true);
 
     try {
-      // 1. SAVE TO FIREBASE
-      await addDoc(collection(db, 'leads'), {
-        Date: new Date().toLocaleString(),
-        Timestamp: serverTimestamp(),
-        Type: userType,
-        Name: formData.name,
-        Email: formData.email,
-        Phone: formData.phone,
-        Handle_Company: formData.igHandle || formData.company || 'N/A',
-        Niche_Website: formData.niche || formData.website || 'N/A',
-        Followers: formData.igFollowers || 'N/A',
-        Message: formData.message,
-        // YT
-        YT_Name: formData.ytName || 'N/A',
-        YT_Link: formData.ytLink || 'N/A',
-        YT_Subs: formData.ytSubs || 'N/A',
-        // IG
-        IG_Handle: formData.igHandle || 'N/A',
-        IG_Link: formData.igLink || 'N/A',
-        IG_Followers: formData.igFollowers || 'N/A',
-        // FB
-        FB_Name: formData.fbName || 'N/A',
-        FB_Link: formData.fbLink || 'N/A',
-        FB_Followers: formData.fbFollowers || 'N/A',
-        // Specifics for Brand if needed (redundant but matches schema)
-        Company: formData.company || 'N/A',
-        Website: formData.website || 'N/A'
+      // 1. SAVE TO MONGODB VIA API
+      await fetch('http://localhost:5000/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: userType,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          handleCompany: formData.igHandle || formData.company || 'N/A',
+          nicheWebsite: formData.niche || formData.website || 'N/A',
+          followers: formData.igFollowers || 'N/A',
+          message: formData.message,
+          ytName: formData.ytName || 'N/A',
+          ytLink: formData.ytLink || 'N/A',
+          ytSubs: formData.ytSubs || 'N/A',
+          igHandle: formData.igHandle || 'N/A',
+          igLink: formData.igLink || 'N/A',
+          igFollowers: formData.igFollowers || 'N/A',
+          fbName: formData.fbName || 'N/A',
+          fbLink: formData.fbLink || 'N/A',
+          fbFollowers: formData.fbFollowers || 'N/A',
+          company: formData.company || 'N/A',
+          website: formData.website || 'N/A'
+        })
       });
 
       // 2. PREPARE WHATSAPP MESSAGE

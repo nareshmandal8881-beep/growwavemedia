@@ -12,21 +12,30 @@ export default function CommentThread({ submissionId, isAdmin }) {
   const [user, setUser] = useState(null);
   const bottomRef = useRef(null);
 
+  const API_BASE = 'http://localhost:5000/api';
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return unsub;
   }, []);
 
-  useEffect(() => {
+  const fetchComments = async () => {
     if (!submissionId) return;
-    const q = query(
-      collection(db, 'portal_submissions', submissionId, 'comments'),
-      orderBy('createdAt', 'asc'),
-    );
-    const unsub = onSnapshot(q, (snap) => {
-      setComments(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    });
-    return unsub;
+    try {
+      const res = await fetch(`${API_BASE}/comments/submission/${submissionId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data);
+      }
+    } catch (err) {
+      console.error("Fetch Comments Error:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchComments();
+    const interval = setInterval(fetchComments, 5000); // Polling every 5s
+    return () => clearInterval(interval);
   }, [submissionId]);
 
   useEffect(() => {
@@ -37,16 +46,23 @@ export default function CommentThread({ submissionId, isAdmin }) {
     e.preventDefault();
     if (!text.trim()) return;
     const senderName = isAdmin ? 'Admin' : (user?.displayName || user?.email || 'Creator');
-    await addDoc(
-      collection(db, 'portal_submissions', submissionId, 'comments'),
-      {
-        text: text.trim(),
-        sender: senderName,
-        isAdmin: !!isAdmin,
-        createdAt: serverTimestamp(),
-      },
-    );
-    setText('');
+    
+    try {
+      await fetch(`${API_BASE}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          submissionId,
+          text: text.trim(),
+          sender: senderName,
+          isAdmin: !!isAdmin
+        })
+      });
+      setText('');
+      fetchComments();
+    } catch (err) {
+      console.error("Send Comment Error:", err);
+    }
   };
 
   return (
@@ -64,8 +80,8 @@ export default function CommentThread({ submissionId, isAdmin }) {
             <span className="comment-bubble__sender">{c.sender}</span>
             <p className="comment-bubble__text">{c.text}</p>
             <span className="comment-bubble__time">
-              {c.createdAt?.toDate
-                ? c.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              {c.createdAt
+                ? new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 : ''}
             </span>
           </div>

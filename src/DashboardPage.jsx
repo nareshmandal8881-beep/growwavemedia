@@ -7,11 +7,7 @@ import {
   ChevronDown, ChevronUp, Eye, Receipt, Download
 } from 'lucide-react';
 import { db, auth, storage } from './firebase';
-import {
-  collection, getDocs, deleteDoc, doc,
-  query, orderBy, addDoc, updateDoc,
-  serverTimestamp, where, limit
-} from 'firebase/firestore';
+const API_BASE = 'http://localhost:5000/api';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import StatusBadge from './portal/components/StatusBadge';
@@ -34,9 +30,9 @@ function LeadsPanel({ activeTab }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'leads'), orderBy('Timestamp', 'desc'));
-      const snap = await getDocs(q);
-      setData(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const res = await fetch(`${API_BASE}/leads`);
+      const json = await res.json();
+      setData(json);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -45,7 +41,7 @@ function LeadsPanel({ activeTab }) {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this lead?')) return;
-    await deleteDoc(doc(db, 'leads', id));
+    await fetch(`${API_BASE}/leads/${id}`, { method: 'DELETE' });
     fetchData();
   };
 
@@ -197,15 +193,14 @@ function CreatorsPanel() {
   const handleUpdateCreator = async () => {
     setUpdating(true);
     try {
-      await updateDoc(doc(db, 'portal_creators', selectedCreator.id), {
-        name: selectedCreator.name || '',
-        phone: selectedCreator.phone || '',
-        channelName: selectedCreator.channelName || '',
-        youtubeLink: selectedCreator.youtubeLink || '',
-        instagramLink: selectedCreator.instagramLink || '',
-        paymentDetails: selectedCreator.paymentDetails || ''
+      const res = await fetch(`${API_BASE}/creators/${selectedCreator._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(selectedCreator)
       });
-      setCreators(prev => prev.map(c => c.id === selectedCreator.id ? selectedCreator : c));
+      if (!res.ok) throw new Error('Failed to update creator');
+      const updated = await res.json();
+      setCreators(prev => prev.map(c => c._id === updated._id ? updated : c));
       alert('Creator details updated successfully!');
       setSelectedCreator(null);
     } catch (err) {
@@ -217,9 +212,12 @@ function CreatorsPanel() {
 
   const fetchCreators = async () => {
     setLoading(true);
-    const snap = await getDocs(collection(db, 'portal_creators'));
-    setCreators(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    setLoading(false);
+    try {
+      const res = await fetch(`${API_BASE}/creators`);
+      const data = await res.json();
+      setCreators(data);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => { fetchCreators(); }, []);
@@ -228,21 +226,37 @@ function CreatorsPanel() {
     e.preventDefault();
     setSaving(true);
     try {
+      // 1. Create in Firebase Auth
       const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
       await updateProfile(cred.user, { displayName: form.name });
-      await addDoc(collection(db, 'portal_creators'), {
-        uid: cred.user.uid,
-        name: form.name, email: form.email,
-        phone: form.phone,
-        channelName: form.channelName,
-        youtubeLink: form.youtubeLink,
-        instagramLink: form.instagramLink,
-        paymentDetails: form.paymentDetails,
-        createdAt: serverTimestamp(),
+      
+      // 2. Create in MongoDB
+      const res = await fetch(`${API_BASE}/creators`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: cred.user.uid,
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          channelName: form.channelName,
+          youtubeLink: form.youtubeLink,
+          instagramLink: form.instagramLink,
+          creatorAddress: form.creatorAddress,
+          accountHolder: form.accountHolder,
+          bankName: form.bankName,
+          ifscCode: form.ifscCode,
+          accountNumber: form.accountNumber,
+          upiId: form.upiId,
+        })
       });
+      
+      if (!res.ok) throw new Error('Failed to save creator profile to MongoDB');
+
       setShowForm(false);
       setForm({ name:'', email:'', phone:'', channelName:'', youtubeLink:'', instagramLink:'', paymentDetails:'', password:'' });
       fetchCreators();
+      alert('Creator account created successfully!');
     } catch (err) {
       alert('Error: ' + err.message);
     } finally { setSaving(false); }
@@ -371,13 +385,16 @@ function DealsPanel() {
 
   const fetchAll = async () => {
     setLoading(true);
-    const [dsnap, csnap] = await Promise.all([
-      getDocs(query(collection(db, 'portal_deals'), orderBy('createdAt','desc'))),
-      getDocs(collection(db, 'portal_creators')),
-    ]);
-    setDeals(dsnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    setCreators(csnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    setLoading(false);
+    try {
+      const [dres, cres] = await Promise.all([
+        fetch(`${API_BASE}/deals`),
+        fetch(`${API_BASE}/creators`)
+      ]);
+      const [dData, cData] = await Promise.all([dres.json(), cres.json()]);
+      setDeals(dData);
+      setCreators(cData);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => { fetchAll(); }, []);
@@ -386,16 +403,20 @@ function DealsPanel() {
     e.preventDefault();
     setSaving(true);
     try {
-      const creator = creators.find(c => c.id === form.creatorId);
-      await addDoc(collection(db, 'portal_deals'), {
-        ...form,
-        creatorName: creator?.name || '',
-        channelName: creator?.channelName || '',
-        youtubeLink: creator?.youtubeLink || '',
-        instagramLink: creator?.instagramLink || '',
-        status: 'locked', // Deal is locked until admin approves
-        createdAt: serverTimestamp(),
+      const creator = creators.find(c => c._id === form.creatorId);
+      const res = await fetch(`${API_BASE}/deals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          creatorName: creator?.name || '',
+          channelName: creator?.channelName || '',
+          youtubeLink: creator?.youtubeLink || '',
+          instagramLink: creator?.instagramLink || '',
+          status: 'locked'
+        })
       });
+      if (!res.ok) throw new Error('Failed to create deal');
       setShowForm(false);
       setForm({ title:'', creatorId:'', deliverables:'', amount:'', platform:'', videoType:'', deadline:'' });
       fetchAll();
@@ -405,13 +426,17 @@ function DealsPanel() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this deal?')) return;
-    await deleteDoc(doc(db, 'portal_deals', id));
+    await fetch(`${API_BASE}/deals/${id}`, { method: 'DELETE' });
     fetchAll();
   };
 
   const handleApproveDeal = async (id) => {
     if (!window.confirm('Approve this deal and notify the creator?')) return;
-    await updateDoc(doc(db, 'portal_deals', id), { status: 'approved' });
+    await fetch(`${API_BASE}/deals/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'approved' })
+    });
     fetchAll();
   };
 
@@ -510,15 +535,18 @@ function SubmissionsPanel() {
 
   const fetchSubs = async () => {
     setLoading(true);
-    const snap = await getDocs(query(collection(db, 'portal_submissions'), orderBy('submittedAt','desc')));
-    setSubs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    setLoading(false);
+    try {
+      const res = await fetch(`${API_BASE}/submissions`);
+      const data = await res.json();
+      setSubs(data);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => { fetchSubs(); }, []);
 
   const handleApproveAndPay = async (sub) => {
-    const pForm = paymentForms[sub.id] || {};
+    const pForm = paymentForms[sub._id] || {};
     if (!pForm.utrId) {
       alert("Please enter a UTR ID to mark as paid.");
       return;
@@ -527,41 +555,43 @@ function SubmissionsPanel() {
     try {
       let proofUrl = '';
       if (pForm.file) {
-        const storageRef = ref(storage, `admin_payments/${sub.id}/${Date.now()}_${pForm.file.name}`);
+        const storageRef = ref(storage, `admin_payments/${sub._id}/${Date.now()}_${pForm.file.name}`);
         await uploadBytes(storageRef, pForm.file);
         proofUrl = await getDownloadURL(storageRef);
       }
 
-      // 1. Update submission
-      await updateDoc(doc(db, 'portal_submissions', sub.id), { 
-        status: 'paid', 
-        adminUtrId: pForm.utrId,
-        adminProofUrl: proofUrl,
-        reviewedAt: serverTimestamp() 
-      });
-      // 3. Update the existing invoice raised by the creator
-      const invQuery = query(
-        collection(db, 'portal_invoices'), 
-        where('dealId', '==', sub.dealId),
-        where('status', '==', 'pending_payment'),
-        orderBy('createdAt', 'desc'),
-        limit(1)
-      );
-      const invSnap = await getDocs(invQuery);
-      
-      let invoiceMsg = "Payment updated.";
-      if (!invSnap.empty) {
-        const invDoc = invSnap.docs[0];
-        await updateDoc(doc(db, 'portal_invoices', invDoc.id), {
+      // 1. Update submission in MongoDB
+      await fetch(`${API_BASE}/submissions/${sub._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           status: 'paid',
-          utrId: pForm.utrId,
-          adminProofUrl: proofUrl || '',
-          paidAt: serverTimestamp()
-        });
-        invoiceMsg = `Invoice ${invDoc.data().invoiceId} marked as PAID.`;
+          adminUtrId: pForm.utrId,
+          adminProofUrl: proofUrl
+        })
+      });
+
+      // 2. Find and update invoice in MongoDB
+      // For simplicity in this demo, we'll assume the API handles the update or we fetch by dealId
+      // I'll add a helper to update invoice by dealId
+      const ires = await fetch(`${API_BASE}/invoices/creator/${sub.creatorId}`);
+      if (ires.ok) {
+        const invs = await ires.json();
+        const targetInv = invs.find(i => i.dealId === sub.dealId && i.status === 'pending_payment');
+        if (targetInv) {
+          await fetch(`${API_BASE}/invoices/${targetInv._id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status: 'paid',
+              utrId: pForm.utrId,
+              adminProofUrl: proofUrl || ''
+            })
+          });
+        }
       }
 
-      alert(`✅ Paid & Approved! ${invoiceMsg}`);
+      alert(`✅ Paid & Approved!`);
       fetchSubs();
     } catch (err) {
       alert(err.message);
@@ -572,10 +602,20 @@ function SubmissionsPanel() {
 
   const handleReject = async (sub) => {
     const note = rejectNote || 'Rejected by admin.';
-    await updateDoc(doc(db, 'portal_submissions', sub.id), { status: 'rejected', rejectReason: note, reviewedAt: serverTimestamp() });
-    await updateDoc(doc(db, 'portal_deals', sub.dealId), { status: 'rejected', updatedAt: serverTimestamp() });
-    setRejectNote('');
-    fetchSubs();
+    try {
+      await fetch(`${API_BASE}/submissions/${sub._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected', rejectReason: note })
+      });
+      await fetch(`${API_BASE}/deals/${sub.dealId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' })
+      });
+      setRejectNote('');
+      fetchSubs();
+    } catch (err) { alert(err.message); }
   };
 
   return (
@@ -668,11 +708,11 @@ function SubmissionsPanel() {
                       <div className="admin-form-grid" style={{marginBottom: '1rem'}}>
                         <div className="portal-field">
                           <label>UTR ID *</label>
-                          <input type="text" placeholder="Enter UTR..." value={paymentForms[sub.id]?.utrId || ''} onChange={e => setPaymentForms(p => ({...p, [sub.id]: {...(p[sub.id]||{}), utrId: e.target.value}}))} />
+                          <input type="text" placeholder="Enter UTR..." value={paymentForms[sub._id]?.utrId || ''} onChange={e => setPaymentForms(p => ({...p, [sub._id]: {...(p[sub._id]||{}), utrId: e.target.value}}))} />
                         </div>
                         <div className="portal-field">
                           <label>Payment Screenshot</label>
-                          <input type="file" accept="image/*" onChange={e => setPaymentForms(p => ({...p, [sub.id]: {...(p[sub.id]||{}), file: e.target.files[0]}}))} />
+                          <input type="file" accept="image/*" onChange={e => setPaymentForms(p => ({...p, [sub._id]: {...(p[sub._id]||{}), file: e.target.files[0]}}))} />
                         </div>
                       </div>
                       <div className="admin-sub-actions">
@@ -693,7 +733,7 @@ function SubmissionsPanel() {
                     </div>
                   )}
 
-                  <CommentThread submissionId={sub.id} isAdmin={true}/>
+                  <CommentThread submissionId={sub._id} isAdmin={true}/>
                 </div>
               )}
             </div>
@@ -712,9 +752,12 @@ function InvoicesPanel() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const snap = await getDocs(query(collection(db, 'portal_invoices'), orderBy('createdAt','desc')));
-      setInvoices(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-      setLoading(false);
+      try {
+        const res = await fetch(`${API_BASE}/invoices`);
+        const data = await res.json();
+        setInvoices(data);
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
     })();
   }, []);
 
@@ -727,7 +770,7 @@ function InvoicesPanel() {
             <thead><tr><th>Invoice ID</th><th>Creator</th><th>Deal</th><th>Amount</th><th>Date</th><th>Status</th><th>View</th></tr></thead>
             <tbody>
               {invoices.map(inv => (
-                <tr key={inv.id}>
+                <tr key={inv._id}>
                   <td><div style={{fontFamily:'monospace',fontSize:'0.8rem'}}>{inv.invoiceId}</div></td>
                   <td><div>{inv.creatorName}</div></td>
                   <td><div>{inv.dealTitle}</div></td>
@@ -735,7 +778,7 @@ function InvoicesPanel() {
                   <td><div>{inv.date}</div></td>
                   <td><StatusBadge status={inv.status}/></td>
                   <td>
-                    <Link to={`/portal/invoice/${inv.id}`} className="row-view-btn" title="View Invoice">
+                    <Link to={`/portal/invoice/${inv._id}`} className="row-view-btn" title="View Invoice">
                       <Eye size={18}/>
                     </Link>
                   </td>

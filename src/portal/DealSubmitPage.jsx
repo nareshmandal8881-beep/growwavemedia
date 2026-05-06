@@ -3,8 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { auth, db, storage } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
-  doc, getDoc, collection, query, where, getDocs,
-  addDoc, updateDoc, serverTimestamp,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Helmet } from 'react-helmet-async';
@@ -44,18 +43,14 @@ export default function DealSubmitPage() {
   const [submitted, setSubmitted] = useState(false);
   const [existingSubId, setExistingSubId] = useState(null);
 
-  const [uploadMode, setUploadMode] = useState('link'); // 'link' | 'file'
   const [selectedPlatform, setSelectedPlatform] = useState('youtube');
-  const [videoFile, setVideoFile] = useState(null);
-  const [videoFilePreview, setVideoFilePreview] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadedVideoUrl, setUploadedVideoUrl] = useState('');
-
   const [sigFile, setSigFile] = useState(null);
   const [sigPreview, setSigPreview] = useState(null);
   const [sigUploadProgress, setSigUploadProgress] = useState(0);
   const [uploadedSigUrl, setUploadedSigUrl] = useState('');
-  const [subTask, setSubTask] = useState(''); // Tracking current upload task
+  const [subTask, setSubTask] = useState(''); 
+
+  const API_BASE = 'http://localhost:5000/api';
 
   const [form, setForm] = useState({
     videoLink: '',
@@ -76,64 +71,64 @@ export default function DealSubmitPage() {
       if (!user) { navigate('/portal/login'); return; }
       setLoading(true);
       try {
-        const cq = query(collection(db, 'portal_creators'), where('uid', '==', user.uid));
-        const csnap = await getDocs(cq);
-        if (csnap.empty) { navigate('/portal/login'); return; }
-        const creatorData = { id: csnap.docs[0].id, ...csnap.docs[0].data() };
+        // 1. Fetch creator profile from MongoDB
+        const cres = await fetch(`${API_BASE}/creators/uid/${user.uid}`);
+        if (!cres.ok) { 
+          await auth.signOut();
+          navigate('/portal/login'); 
+          return; 
+        }
+        const creatorData = await cres.json();
         setCreator(creatorData);
 
-        const dealDoc = await getDoc(doc(db, 'portal_deals', id));
-        if (!dealDoc.exists()) { navigate('/portal/dashboard'); return; }
-        const dealData = { id: dealDoc.id, ...dealDoc.data() };
-        if (dealData.creatorId && dealData.creatorId !== creatorData.id) {
-          navigate('/portal/dashboard'); return;
-        }
+        // 2. Fetch deal details from MongoDB
+        const dres = await fetch(`${API_BASE}/deals/${id}`);
+        if (!dres.ok) { navigate('/portal/dashboard'); return; }
+        const dealData = await dres.json();
         setDeal(dealData);
 
-        // Pre-fill from creator profile
-        setForm((f) => ({
-          ...f,
-          channelName: creatorData.channelName || '',
-          creatorAddress: creatorData.creatorAddress || '',
-          accountHolder: creatorData.accountHolder || '',
-          bankName: creatorData.bankName || '',
-          ifscCode: creatorData.ifscCode || '',
-          accountNumber: creatorData.accountNumber || '',
-          upiId: creatorData.upiId || '',
-        }));
+        // 3. Check for existing submission in MongoDB
+        const sres = await fetch(`${API_BASE}/submissions/deal/${id}`);
+        if (sres.ok) {
+          const sub = await sres.json();
+          if (sub) {
+            setExistingSubId(sub._id);
+            setForm((f) => ({
+              ...f,
+              videoLink: sub.videoLink || '',
+              timestamp: sub.timestamp || '',
+              channelName: sub.channelName || f.channelName || '',
+              creatorAddress: sub.creatorAddress || f.creatorAddress || '',
+              accountHolder: sub.accountHolder || f.accountHolder || '',
+              bankName: sub.bankName || f.bankName || '',
+              ifscCode: sub.ifscCode || f.ifscCode || '',
+              accountNumber: sub.accountNumber || f.accountNumber || '',
+              upiId: sub.upiId || f.upiId || '',
+            }));
+            if (sub.signatureUrl) {
+              setUploadedSigUrl(sub.signatureUrl);
+              setSigPreview(sub.signatureUrl);
+            }
+          } else {
+            // Pre-fill from creator profile if no submission yet
+            setForm((f) => ({
+              ...f,
+              channelName: creatorData.channelName || '',
+              creatorAddress: creatorData.creatorAddress || '',
+              accountHolder: creatorData.accountHolder || '',
+              bankName: creatorData.bankName || '',
+              ifscCode: creatorData.ifscCode || '',
+              accountNumber: creatorData.accountNumber || '',
+              upiId: creatorData.upiId || '',
+            }));
+          }
+        }
 
         // Set platform from deal if available
         if (dealData.platform) {
           const p = dealData.platform.toLowerCase();
           if (['youtube', 'instagram', 'facebook', 'twitter'].includes(p)) {
             setSelectedPlatform(p);
-          }
-        }
-
-        const sq = query(collection(db, 'portal_submissions'), where('dealId', '==', id));
-        const ssnap = await getDocs(sq);
-        if (!ssnap.empty) {
-          const sub = { id: ssnap.docs[0].id, ...ssnap.docs[0].data() };
-          setExistingSubId(sub.id);
-          setForm((f) => ({
-            ...f,
-            videoLink: sub.videoLink || '',
-            timestamp: sub.timestamp || '',
-            channelName: sub.channelName || f.channelName || '',
-            creatorAddress: sub.creatorAddress || f.creatorAddress || '',
-            accountHolder: sub.accountHolder || f.accountHolder || '',
-            bankName: sub.bankName || f.bankName || '',
-            ifscCode: sub.ifscCode || f.ifscCode || '',
-            accountNumber: sub.accountNumber || f.accountNumber || '',
-            upiId: sub.upiId || f.upiId || '',
-          }));
-          if (sub.signatureUrl) {
-            setUploadedSigUrl(sub.signatureUrl);
-            setSigPreview(sub.signatureUrl);
-          }
-          if (sub.uploadedVideoUrl) {
-            setUploadedVideoUrl(sub.uploadedVideoUrl);
-            setUploadMode('file');
           }
         }
       } catch (err) {
@@ -151,18 +146,6 @@ export default function DealSubmitPage() {
     setErrors((e) => ({ ...e, [name]: '' }));
   };
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 500 * 1024 * 1024) {
-        alert('Video file is too large (max 500MB)');
-        return;
-      }
-      setVideoFile(file);
-      setVideoFilePreview(URL.createObjectURL(file));
-      setUploadedVideoUrl('');
-    }
-  };
 
   const handleSigSelect = (e) => {
     const file = e.target.files[0];
@@ -177,23 +160,12 @@ export default function DealSubmitPage() {
     }
   };
 
-  const clearFile = () => {
-    setVideoFile(null);
-    setVideoFilePreview(null);
-    setUploadedVideoUrl('');
-    setUploadProgress(0);
-  };
 
   const validateStep = () => {
     const e = {};
     if (step === 0) {
-      if (uploadMode === 'link') {
-        if (!form.videoLink.trim()) e.videoLink = 'Please enter the video/content link';
-        if (!form.timestamp.trim()) e.timestamp = 'Promotion timestamp is required (e.g. 2:35 – 3:10)';
-      } else {
-        if (!videoFile && !uploadedVideoUrl) e.videoFile = 'Please upload a video file';
-        if (!form.timestamp.trim()) e.timestamp = 'Promotion timestamp is required (e.g. 2:35 – 3:10)';
-      }
+      if (!form.videoLink.trim()) e.videoLink = 'Please enter the video/content link';
+      if (!form.timestamp.trim()) e.timestamp = 'Promotion timestamp is required (e.g. 2:35 – 3:10)';
     }
     if (step === 1) {
       if (!form.channelName.trim()) e.channelName = 'Channel Name is required';
@@ -212,39 +184,12 @@ export default function DealSubmitPage() {
   const next = () => { if (validateStep()) setStep((s) => s + 1); };
   const back = () => setStep((s) => s - 1);
 
-  const uploadVideoFile = async (onProgress) => {
-    if (!videoFile) return uploadedVideoUrl || '';
-    return new Promise((resolve, reject) => {
-      const storageRef = ref(storage, `creator_videos/${id}/${Date.now()}_${videoFile.name}`);
-      const task = uploadBytesResumable(storageRef, videoFile);
-      task.on('state_changed',
-        (snap) => {
-          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-          setUploadProgress(pct);
-          if (onProgress) onProgress(pct);
-        },
-        (err) => {
-          console.error("Video Upload Error:", err);
-          reject(err);
-        },
-        async () => {
-          const url = await getDownloadURL(task.snapshot.ref);
-          resolve(url);
-        }
-      );
-    });
-  };
 
   const handleSubmit = async () => {
     if (!validateStep()) return;
     setSubmitting(true);
-    setSubTask('Preparing...');
     try {
       let finalVideoUrl = '';
-      if (uploadMode === 'file') {
-        setSubTask('Uploading Video...');
-        finalVideoUrl = await uploadVideoFile((p) => setSubTask(`Uploading Video ${p}%`));
-      }
 
       const uploadSigFile = async () => {
         if (!sigFile) return uploadedSigUrl || '';
@@ -276,12 +221,12 @@ export default function DealSubmitPage() {
       const subData = {
         dealId: id,
         dealTitle: deal.title,
-        creatorId: creator.id,
+        creatorId: creator._id,
         creatorName: creator.name,
-        videoLink: uploadMode === 'link' ? form.videoLink : '',
-        uploadedVideoUrl: uploadMode === 'file' ? finalVideoUrl : '',
+        videoLink: form.videoLink,
+        uploadedVideoUrl: '',
         contentPlatform: selectedPlatform,
-        uploadMode,
+        uploadMode: 'link',
         timestamp: form.timestamp,
         channelName: form.channelName,
         creatorAddress: form.creatorAddress,
@@ -295,59 +240,67 @@ export default function DealSubmitPage() {
         amount: deal.amount || '',
         videoType: deal.videoType || '',
         status: 'submitted_video',
-        submittedAt: serverTimestamp(),
       };
 
-      if (existingSubId) {
-        await updateDoc(doc(db, 'portal_submissions', existingSubId), subData);
-      } else {
-        await addDoc(collection(db, 'portal_submissions'), subData);
-      }
+      const sres = await fetch(`${API_BASE}/submissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subData)
+      });
+      if (!sres.ok) throw new Error('Failed to save submission');
 
       setSubTask('Updating Deal...');
-      await updateDoc(doc(db, 'portal_deals', id), {
-        status: 'submitted_video',
-        updatedAt: serverTimestamp()
+      await fetch(`${API_BASE}/deals/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'submitted_video' })
       });
 
       setSubTask('Syncing Profile...');
-      await updateDoc(doc(db, 'portal_creators', creator.id), {
-        channelName: form.channelName,
-        creatorAddress: form.creatorAddress,
-        accountHolder: form.accountHolder,
-        bankName: form.bankName,
-        ifscCode: form.ifscCode,
-        accountNumber: form.accountNumber,
-        upiId: form.upiId,
+      await fetch(`${API_BASE}/creators/${creator._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelName: form.channelName,
+          creatorAddress: form.creatorAddress,
+          accountHolder: form.accountHolder,
+          bankName: form.bankName,
+          ifscCode: form.ifscCode,
+          accountNumber: form.accountNumber,
+          upiId: form.upiId,
+        })
       });
 
       setSubTask('Generating Invoice...');
       const invId = generateInvoiceId();
-      await addDoc(collection(db, 'portal_invoices'), {
-        invoiceId: invId,
-        dealId: id,
-        dealTitle: deal.title,
-        creatorId: creator.id,
-        creatorName: creator.name,
-        creatorEmail: creator.email || '',
-        creatorPhone: creator.phone || '',
-        videoType: deal.videoType || '',
-        amount: deal.amount || '',
-        platform: selectedPlatform,
-        utrId: '',
-        adminProofUrl: '',
-        signatureUrl: finalSigUrl,
-        channelName: form.channelName,
-        creatorAddress: form.creatorAddress,
-        accountHolder: form.accountHolder,
-        bankName: form.bankName,
-        ifscCode: form.ifscCode,
-        accountNumber: form.accountNumber,
-        upiId: form.upiId,
-        billingPeriod: form.billingPeriod,
-        status: 'pending_payment',
-        date: new Date().toLocaleDateString('en-IN'),
-        createdAt: serverTimestamp(),
+      await fetch(`${API_BASE}/invoices`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          invoiceId: invId,
+          dealId: id,
+          dealTitle: deal.title,
+          creatorId: creator._id,
+          creatorName: creator.name,
+          creatorEmail: creator.email || '',
+          creatorPhone: creator.phone || '',
+          videoType: deal.videoType || '',
+          amount: deal.amount || '',
+          platform: selectedPlatform,
+          utrId: '',
+          adminProofUrl: '',
+          signatureUrl: finalSigUrl,
+          channelName: form.channelName,
+          creatorAddress: form.creatorAddress,
+          accountHolder: form.accountHolder,
+          bankName: form.bankName,
+          ifscCode: form.ifscCode,
+          accountNumber: form.accountNumber,
+          upiId: form.upiId,
+          billingPeriod: form.billingPeriod,
+          status: 'pending_payment',
+          date: new Date().toLocaleDateString('en-IN'),
+        })
       });
 
       setSubTask('Done!');
@@ -451,95 +404,26 @@ export default function DealSubmitPage() {
                 </div>
               </div>
 
-              {/* Upload Mode Toggle */}
-              <div className="portal-field" style={{ marginBottom: '1.5rem' }}>
-                <label>Submission Method</label>
-                <div className="upload-mode-toggle">
-                  <button
-                    type="button"
-                    className={`upload-mode-btn ${uploadMode === 'link' ? 'active' : ''}`}
-                    onClick={() => setUploadMode('link')}
-                  >
-                    <Link2 size={16} /> Paste Link
-                  </button>
-                  <button
-                    type="button"
-                    className={`upload-mode-btn ${uploadMode === 'file' ? 'active' : ''}`}
-                    onClick={() => setUploadMode('file')}
-                  >
-                    <Upload size={16} /> Upload Video File
-                  </button>
-                </div>
+              <div className="portal-field">
+                <label htmlFor="videoLink">Content / Video Link *</label>
+                <input
+                  id="videoLink"
+                  name="videoLink"
+                  type="url"
+                  placeholder={
+                    selectedPlatform === 'youtube' ? 'https://youtube.com/watch?v=…' :
+                    selectedPlatform === 'instagram' ? 'https://instagram.com/reel/…' :
+                    selectedPlatform === 'facebook' ? 'https://facebook.com/video/…' :
+                    'Paste your unlisted content link…'
+                  }
+                  value={form.videoLink}
+                  onChange={handleChange}
+                />
+                {errors.videoLink && <span className="portal-field-error">{errors.videoLink}</span>}
+                <p style={{ fontSize: '0.8rem', color: 'var(--portal-muted)', marginTop: '0.4rem' }}>
+                  ⚠️ Make sure the link is unlisted/private (not public). The admin will review it.
+                </p>
               </div>
-
-              {/* Link Mode */}
-              {uploadMode === 'link' && (
-                <div className="portal-field">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    {platform.icon} {platform.label} — Unlisted / Private Link *
-                  </label>
-                  <input
-                    id="videoLink"
-                    name="videoLink"
-                    type="url"
-                    placeholder={
-                      selectedPlatform === 'youtube' ? 'https://youtube.com/watch?v=…' :
-                      selectedPlatform === 'instagram' ? 'https://instagram.com/reel/…' :
-                      selectedPlatform === 'facebook' ? 'https://facebook.com/video/…' :
-                      'Paste your unlisted content link…'
-                    }
-                    value={form.videoLink}
-                    onChange={handleChange}
-                  />
-                  {errors.videoLink && <span className="portal-field-error">{errors.videoLink}</span>}
-                  <p style={{ fontSize: '0.8rem', color: 'var(--portal-muted)', marginTop: '0.4rem' }}>
-                    ⚠️ Make sure the link is unlisted/private (not public). The admin will review it.
-                  </p>
-                </div>
-              )}
-
-              {/* File Upload Mode */}
-              {uploadMode === 'file' && (
-                <div className="portal-field">
-                  <label>Upload Video File *</label>
-
-                  {!videoFile && !uploadedVideoUrl ? (
-                    <div className="video-dropzone" onClick={() => document.getElementById('videoFileInput').click()}>
-                      <Film size={40} style={{ color: 'var(--portal-muted)', marginBottom: '0.75rem' }} />
-                      <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Click to upload video</p>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--portal-muted)' }}>MP4, MOV, AVI — Max 500MB</p>
-                      <input
-                        id="videoFileInput"
-                        type="file"
-                        accept="video/*"
-                        style={{ display: 'none' }}
-                        onChange={handleFileSelect}
-                      />
-                    </div>
-                  ) : (
-                    <div className="video-preview-wrap">
-                      {videoFilePreview ? (
-                        <video src={videoFilePreview} controls style={{ width: '100%', borderRadius: '8px', maxHeight: '240px', background: '#000' }} />
-                      ) : uploadedVideoUrl ? (
-                        <video src={uploadedVideoUrl} controls style={{ width: '100%', borderRadius: '8px', maxHeight: '240px', background: '#000' }} />
-                      ) : null}
-                      <div className="video-file-info">
-                        <span>{videoFile?.name || 'Previously uploaded video'}</span>
-                        <button type="button" className="portal-btn portal-btn--ghost" onClick={clearFile} style={{ padding: '0.25rem 0.75rem' }}>
-                          <X size={14} /> Remove
-                        </button>
-                      </div>
-                      {uploadProgress > 0 && uploadProgress < 100 && (
-                        <div className="upload-progress-bar">
-                          <div className="upload-progress-fill" style={{ width: `${uploadProgress}%` }} />
-                          <span>{uploadProgress}%</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {errors.videoFile && <span className="portal-field-error">{errors.videoFile}</span>}
-                </div>
-              )}
 
               {/* Timestamp - always shown */}
               <div className="portal-field" style={{ marginTop: '1.5rem' }}>
