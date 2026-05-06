@@ -641,18 +641,18 @@ function SubmissionsPanel() {
         <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
           {subs.length === 0 && <div className="dash-empty"><Filter size={48}/><h3>No submissions yet</h3></div>}
           {subs.map(sub => (
-            <div key={sub.id} className="admin-sub-card">
-              <div className="admin-sub-card__header" onClick={() => setExpanded(expanded === sub.id ? null : sub.id)}>
+            <div key={sub._id} className="admin-sub-card">
+              <div className="admin-sub-card__header" onClick={() => setExpanded(expanded === sub._id ? null : sub._id)}>
                 <div>
                   <span className="row-name">{sub.dealTitle}</span>
                   <span style={{marginLeft:'1rem',color:'var(--dash-muted)',fontSize:'0.85rem'}}>{sub.creatorName}</span>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:'1rem'}}>
                   <StatusBadge status={sub.status}/>
-                  {expanded === sub.id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+                  {expanded === sub._id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
                 </div>
               </div>
-              {expanded === sub.id && (
+              {expanded === sub._id && (
                 <div className="admin-sub-card__body">
                   <div className="admin-sub-grid">
                     <div className="portal-review-section">
@@ -699,9 +699,17 @@ function SubmissionsPanel() {
                       <div className="portal-review-row"><span>Amount</span><strong>₹{Number(sub.amount||0).toLocaleString('en-IN')}</strong></div>
                       
                       {(sub.signatureUrl || sub.signatureData) && (
-                        <div className="portal-review-row" style={{marginTop:'1rem'}}>
-                          <span>Signature</span>
-                          <img src={sub.signatureUrl || sub.signatureData} alt="Signature" style={{maxHeight:'60px', background:'#fff', padding:'4px', borderRadius:'4px'}} />
+                        <div className="portal-review-row" style={{marginTop:'1rem', flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem'}}>
+                          <span>Signature Proof</span>
+                          {sub.signatureData ? (
+                            <img src={sub.signatureData} alt="Signature" style={{maxHeight:'80px', background:'#fff', padding:'4px', borderRadius:'4px'}} />
+                          ) : sub.signatureUrl?.includes('firebasestorage') ? (
+                            <img src={sub.signatureUrl} alt="Signature" style={{maxHeight:'80px', background:'#fff', padding:'4px', borderRadius:'4px'}} />
+                          ) : (
+                            <a href={sub.signatureUrl} target="_blank" rel="noreferrer" style={{color: 'var(--accent)', textDecoration: 'underline', wordBreak: 'break-all', fontSize: '0.9rem'}}>
+                              🔗 View Google Drive Link
+                            </a>
+                          )}
                         </div>
                       )}
                     </div>
