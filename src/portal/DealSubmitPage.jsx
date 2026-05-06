@@ -63,6 +63,7 @@ export default function DealSubmitPage() {
     accountNumber: '',
     upiId: '',
     billingPeriod: new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+    signatureLink: '',
   });
   const [errors, setErrors] = useState({});
 
@@ -175,7 +176,9 @@ export default function DealSubmitPage() {
       if (!form.ifscCode.trim()) e.ifscCode = 'IFSC Code is required';
     }
     if (step === 2) {
-      if (!sigFile && !uploadedSigUrl) e.signature = 'Signature upload is mandatory';
+      if (!sigFile && !uploadedSigUrl && !form.signatureLink.trim()) {
+        e.signature = 'Please either upload a signature image OR provide a Drive link';
+      }
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -224,6 +227,7 @@ export default function DealSubmitPage() {
         upiId: form.upiId,
         billingPeriod: form.billingPeriod,
         signatureData: base64Sig,
+        signatureUrl: form.signatureLink,
         amount: deal.amount || '',
         videoType: deal.videoType || '',
         status: 'submitted_video',
@@ -276,7 +280,8 @@ export default function DealSubmitPage() {
           platform: selectedPlatform,
           utrId: '',
           adminProofUrl: '',
-          signatureUrl: finalSigUrl,
+          signatureData: base64Sig,
+          signatureUrl: form.signatureLink,
           channelName: form.channelName,
           creatorAddress: form.creatorAddress,
           accountHolder: form.accountHolder,
@@ -518,6 +523,20 @@ export default function DealSubmitPage() {
                     <span>Uploading Signature…</span>
                   </div>
                 )}
+              </div>
+
+              <div style={{ textAlign: 'center', margin: '1rem 0', color: 'var(--portal-muted)', fontWeight: 600 }}>OR</div>
+
+              <div className="portal-field">
+                <label>Paste Google Drive Link</label>
+                <input
+                  type="url"
+                  name="signatureLink"
+                  className="portal-input"
+                  placeholder="https://drive.google.com/..."
+                  value={form.signatureLink}
+                  onChange={handleChange}
+                />
               </div>
 
               {existingSubId && (
