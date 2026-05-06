@@ -4,14 +4,15 @@ import {
   Users, Briefcase, MessageSquare, LogOut,
   Search, RefreshCw, Filter, Trash2,
   PlusCircle, CheckCircle, XCircle, FileText,
-  ChevronDown, ChevronUp, Eye
+  ChevronDown, ChevronUp, Eye, Receipt, Download
 } from 'lucide-react';
-import { db, auth } from './firebase';
+import { db, auth, storage } from './firebase';
 import {
   collection, getDocs, deleteDoc, doc,
   query, orderBy, addDoc, updateDoc,
-  serverTimestamp, where
+  serverTimestamp, where, limit
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import StatusBadge from './portal/components/StatusBadge';
 import CommentThread from './portal/components/CommentThread';
@@ -538,28 +539,29 @@ function SubmissionsPanel() {
         adminProofUrl: proofUrl,
         reviewedAt: serverTimestamp() 
       });
-      // 2. Update deal
-      await updateDoc(doc(db, 'portal_deals', sub.dealId), { status: 'completed', updatedAt: serverTimestamp() });
+      // 3. Update the existing invoice raised by the creator
+      const invQuery = query(
+        collection(db, 'portal_invoices'), 
+        where('dealId', '==', sub.dealId),
+        where('status', '==', 'pending_payment'),
+        orderBy('createdAt', 'desc'),
+        limit(1)
+      );
+      const invSnap = await getDocs(invQuery);
       
-      // 3. Auto-generate invoice
-      const invId = generateInvoiceId();
-      await addDoc(collection(db, 'portal_invoices'), {
-        invoiceId: invId,
-        dealId: sub.dealId,
-        dealTitle: sub.dealTitle,
-        creatorId: sub.creatorId,
-        creatorName: sub.creatorName,
-        creatorEmail: sub.creatorEmail || '',
-        creatorPhone: sub.creatorPhone || '',
-        videoType: sub.videoType || '',
-        amount: sub.amount || '',
-        utrId: pForm.utrId,
-        signatureData: sub.signatureData || null,
-        status: 'completed',
-        date: new Date().toLocaleDateString('en-IN'),
-        createdAt: serverTimestamp(),
-      });
-      alert(`✅ Paid & Approved! Invoice ${invId} generated.`);
+      let invoiceMsg = "Payment updated.";
+      if (!invSnap.empty) {
+        const invDoc = invSnap.docs[0];
+        await updateDoc(doc(db, 'portal_invoices', invDoc.id), {
+          status: 'paid',
+          utrId: pForm.utrId,
+          adminProofUrl: proofUrl || '',
+          paidAt: serverTimestamp()
+        });
+        invoiceMsg = `Invoice ${invDoc.data().invoiceId} marked as PAID.`;
+      }
+
+      alert(`✅ Paid & Approved! ${invoiceMsg}`);
       fetchSubs();
     } catch (err) {
       alert(err.message);
@@ -602,7 +604,34 @@ function SubmissionsPanel() {
                   <div className="admin-sub-grid">
                     <div className="portal-review-section">
                       <h4>Content Proof</h4>
-                      <div className="portal-review-row"><span>Video Link</span><a href={sub.videoLink} target="_blank" rel="noreferrer">{sub.videoLink}</a></div>
+                      {/* Platform badge */}
+                      {sub.contentPlatform && (
+                        <div className="portal-review-row">
+                          <span>Platform</span>
+                          <strong style={{textTransform:'capitalize'}}>{sub.contentPlatform}</strong>
+                        </div>
+                      )}
+                      {/* Link submission */}
+                      {sub.videoLink && (
+                        <div className="portal-review-row">
+                          <span>Content Link</span>
+                          <a href={sub.videoLink} target="_blank" rel="noreferrer" style={{color:'var(--accent)',wordBreak:'break-all'}}>{sub.videoLink}</a>
+                        </div>
+                      )}
+                      {/* Uploaded video */}
+                      {sub.uploadedVideoUrl && (
+                        <div className="portal-review-row" style={{flexDirection:'column',alignItems:'flex-start',gap:'0.5rem'}}>
+                          <span>Uploaded Video</span>
+                          <video
+                            src={sub.uploadedVideoUrl}
+                            controls
+                            style={{width:'100%',maxHeight:'200px',borderRadius:'8px',background:'#000',marginTop:'0.5rem'}}
+                          />
+                          <a href={sub.uploadedVideoUrl} target="_blank" rel="noreferrer" className="portal-btn portal-btn--sm portal-btn--ghost">
+                            <Download size={14}/> Download Video
+                          </a>
+                        </div>
+                      )}
                       <div className="portal-review-row"><span>Timestamp</span><strong>{sub.timestamp}</strong></div>
                     </div>
                     <div className="portal-review-section">

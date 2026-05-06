@@ -146,6 +146,38 @@ export default function InvoiceView() {
             </div>
           </div>
 
+          {/* Payment Receipt / Proof from Admin */}
+          {invoice.adminProofUrl && (
+            <div className="inv-section">
+              <h3 className="inv-section__title">Payment Receipt</h3>
+              <div style={{ marginTop: '1rem' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--portal-muted)', marginBottom: '0.75rem' }}>
+                  Payment screenshot uploaded by Grow Wave Media admin as proof of transfer.
+                </p>
+                <img
+                  src={invoice.adminProofUrl}
+                  alt="Payment receipt proof"
+                  style={{
+                    maxWidth: '400px',
+                    width: '100%',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    display: 'block',
+                  }}
+                />
+                <a
+                  href={invoice.adminProofUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="portal-btn portal-btn--ghost"
+                  style={{ marginTop: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+                >
+                  🔗 View / Download Receipt
+                </a>
+              </div>
+            </div>
+          )}
+
           {/* Signature Section */}
           {invoice.signatureData ? (
             <div className="inv-sig-section">

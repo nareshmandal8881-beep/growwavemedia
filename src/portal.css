@@ -772,3 +772,193 @@
   }
 }
 
+/* ── Platform Pill Selector ── */
+.platform-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+.platform-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 100px;
+  border: 1px solid var(--portal-border);
+  background: var(--portal-card-bg);
+  color: var(--portal-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.platform-pill:hover {
+  border-color: rgba(255,255,255,0.2);
+  color: var(--portal-text);
+}
+.platform-pill.active {
+  font-weight: 600;
+}
+
+/* ── Upload Mode Toggle ── */
+.upload-mode-toggle {
+  display: flex;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--portal-border);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+  margin-top: 0.25rem;
+}
+.upload-mode-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--portal-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.upload-mode-btn:hover {
+  color: var(--portal-text);
+  background: rgba(255,255,255,0.04);
+}
+.upload-mode-btn.active {
+  background: var(--portal-accent);
+  color: #fff;
+}
+
+/* ── Video Dropzone ── */
+.video-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  border: 2px dashed var(--portal-border);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  color: var(--portal-muted);
+}
+.video-dropzone:hover {
+  border-color: var(--portal-accent);
+  background: rgba(59,130,246,0.06);
+  color: var(--portal-text);
+}
+
+/* ── Video Preview ── */
+.video-preview-wrap {
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+.video-file-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.04);
+  font-size: 0.85rem;
+  color: var(--portal-muted);
+}
+
+/* ── Upload Progress Bar ── */
+.upload-progress-bar {
+  margin: 0 1rem 1rem;
+  background: rgba(255,255,255,0.06);
+  border-radius: 100px;
+  height: 6px;
+  position: relative;
+  overflow: visible;
+}
+.upload-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--portal-accent), #8b5cf6);
+  border-radius: 100px;
+  transition: width 0.3s;
+}
+.upload-progress-bar span {
+  position: absolute;
+  right: 0;
+  top: -1.5rem;
+  font-size: 0.75rem;
+  color: var(--portal-muted);
+}
+
+/* ── Step Indicator ── */
+.portal-step-indicator {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+.portal-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.portal-step__dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--portal-card-bg);
+  border: 2px solid var(--portal-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--portal-muted);
+  transition: all 0.25s;
+}
+.portal-step.active .portal-step__dot {
+  border-color: var(--portal-accent);
+  color: var(--portal-accent);
+  background: rgba(59,130,246,0.12);
+}
+.portal-step.done .portal-step__dot {
+  background: var(--portal-accent);
+  border-color: var(--portal-accent);
+  color: #fff;
+}
+.portal-step__label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--portal-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+.portal-step.active .portal-step__label,
+.portal-step.done .portal-step__label {
+  color: var(--portal-text);
+}
+.portal-step__line {
+  flex: 1;
+  height: 2px;
+  background: var(--portal-border);
+  margin: 0 0.75rem;
+  margin-bottom: 1.5rem;
+  transition: background 0.3s;
+}
+.portal-step__line.done {
+  background: var(--portal-accent);
+}
+
+@media (max-width: 480px) {
+  .platform-pill-row { gap: 0.35rem; }
+  .platform-pill { padding: 0.35rem 0.65rem; font-size: 0.8rem; }
+  .upload-mode-toggle { flex-direction: column; }
+  .video-dropzone { padding: 2rem 1rem; }
+}
