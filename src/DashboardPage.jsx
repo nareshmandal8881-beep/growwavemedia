@@ -47,13 +47,13 @@ function LeadsPanel({ activeTab }) {
 
   const filtered = data.filter(row => {
     const tabMatch =
-      activeTab === 'influencers' ? row.Type === 'influencer' :
-      activeTab === 'brands'      ? row.Type === 'brand' :
-                                    row.Type === 'Contact Enquiry';
+      activeTab === 'influencers' ? row.type === 'influencer' :
+      activeTab === 'brands'      ? row.type === 'brand' :
+                                    row.type === 'contact_form';
     if (!tabMatch) return false;
     if (!searchTerm) return true;
-    return row.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           row.Email?.toLowerCase().includes(searchTerm.toLowerCase());
+    return row.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           row.email?.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
@@ -79,25 +79,25 @@ function LeadsPanel({ activeTab }) {
             <tbody>
               {filtered.map((row, i) => (
                 <tr key={i}>
-                  <td><div>{row.Date?.split(',')[0]}</div></td>
-                  <td><div className="row-name">{row.Name}</div><div className="row-email">{row.Email}</div><div className="row-phone">{row.Phone}</div></td>
+                  <td><div>{new Date(row.createdAt).toLocaleDateString()}</div></td>
+                  <td><div className="row-name">{row.name}</div><div className="row-email">{row.email}</div><div className="row-phone">{row.phone}</div></td>
                   <td>
-                    {row.Type === 'influencer' ? (
+                    {row.type === 'influencer' ? (
                       <div className="platform-tags">
-                        {row.YT_Name !== 'N/A' && <a href={row.YT_Link} target="_blank" rel="noreferrer" className="tag yt">YT: {row.YT_Subs}</a>}
-                        {row.IG_Handle !== 'N/A' && <a href={row.IG_Link} target="_blank" rel="noreferrer" className="tag ig">IG: {row.IG_Followers}</a>}
+                        {row.ytName && row.ytName !== 'N/A' && <a href={row.ytLink} target="_blank" rel="noreferrer" className="tag yt">YT: {row.ytSubs}</a>}
+                        {row.igHandle && row.igHandle !== 'N/A' && <a href={row.igLink} target="_blank" rel="noreferrer" className="tag ig">IG: {row.igFollowers}</a>}
                       </div>
-                    ) : row.Type === 'brand' ? (
-                      <div className="brand-meta"><div className="row-company">{row.Company}</div></div>
+                    ) : row.type === 'brand' ? (
+                      <div className="brand-meta"><div className="row-company">{row.company}</div></div>
                     ) : (
-                      <span className="tag service">{row.Niche_Website}</span>
+                      <span className="tag service">{row.website}</span>
                     )}
                   </td>
-                  <td><div className="msg-full">{row.Message}</div></td>
+                  <td><div className="msg-full">{row.message}</div></td>
                   <td>
                     <div style={{display:'flex',gap:'0.5rem'}}>
                       <button className="row-view-btn" onClick={() => setSelectedRow(row)}><Search size={18}/></button>
-                      <button className="row-delete-btn" onClick={() => handleDelete(row.id)}><Trash2 size={18}/></button>
+                      <button className="row-delete-btn" onClick={() => handleDelete(row._id)}><Trash2 size={18}/></button>
                     </div>
                   </td>
                 </tr>
@@ -117,56 +117,57 @@ function LeadsPanel({ activeTab }) {
               <div className="detail-section">
                 <label>Basic Information</label>
                 <div className="detail-grid">
-                  <div className="detail-item"><span>Name:</span> {selectedRow.Name}</div>
-                  <div className="detail-item"><span>Email:</span> {selectedRow.Email}</div>
-                  <div className="detail-item"><span>Phone:</span> {selectedRow.Phone}</div>
-                  <div className="detail-item"><span>Date:</span> {selectedRow.Date}</div>
+                  <div className="detail-item"><span>Name:</span> {selectedRow.name}</div>
+                  <div className="detail-item"><span>Email:</span> {selectedRow.email}</div>
+                  <div className="detail-item"><span>Phone:</span> {selectedRow.phone}</div>
+                  <div className="detail-item"><span>Date:</span> {new Date(selectedRow.createdAt).toLocaleString()}</div>
                 </div>
               </div>
               
-              {selectedRow.Type === 'influencer' && (
+              {selectedRow.type === 'influencer' && (
                 <div className="detail-section">
                   <label>Platform Details</label>
                   <div className="detail-grid">
-                    {selectedRow.YT_Name && selectedRow.YT_Name !== 'N/A' && (
+                    {selectedRow.ytName && selectedRow.ytName !== 'N/A' && (
                       <div className="detail-item" style={{gridColumn: '1 / -1'}}>
-                        <span>YouTube:</span> {selectedRow.YT_Name} ({selectedRow.YT_Subs} Subs) - <a href={selectedRow.YT_Link} target="_blank" rel="noreferrer" style={{color:'var(--accent)'}}>View Channel</a>
+                        <span>YouTube:</span> {selectedRow.ytName} ({selectedRow.ytSubs} Subs) - <a href={selectedRow.ytLink} target="_blank" rel="noreferrer" style={{color:'var(--accent)'}}>View Channel</a>
                       </div>
                     )}
-                    {selectedRow.IG_Handle && selectedRow.IG_Handle !== 'N/A' && (
+                    {selectedRow.igHandle && selectedRow.igHandle !== 'N/A' && (
                       <div className="detail-item" style={{gridColumn: '1 / -1'}}>
-                        <span>Instagram:</span> {selectedRow.IG_Handle} ({selectedRow.IG_Followers} Followers) - <a href={selectedRow.IG_Link} target="_blank" rel="noreferrer" style={{color:'var(--accent)'}}>View Profile</a>
+                        <span>Instagram:</span> {selectedRow.igHandle} ({selectedRow.igFollowers} Followers) - <a href={selectedRow.igLink} target="_blank" rel="noreferrer" style={{color:'var(--accent)'}}>View Profile</a>
                       </div>
                     )}
-                    {selectedRow.FB_Link && selectedRow.FB_Link !== 'N/A' && (
+                    {selectedRow.fbLink && selectedRow.fbLink !== 'N/A' && (
                       <div className="detail-item" style={{gridColumn: '1 / -1'}}>
-                        <span>Facebook:</span> <a href={selectedRow.FB_Link} target="_blank" rel="noreferrer" style={{color:'var(--accent)'}}>View Profile</a>
+                        <span>Facebook:</span> <a href={selectedRow.fbLink} target="_blank" rel="noreferrer" style={{color:'var(--accent)'}}>View Profile</a>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {selectedRow.Type === 'brand' && selectedRow.Company && (
+              {selectedRow.type === 'brand' && selectedRow.company && (
                 <div className="detail-section">
                   <label>Brand Details</label>
                   <div className="detail-grid">
-                    <div className="detail-item" style={{gridColumn: '1 / -1'}}><span>Company Name:</span> {selectedRow.Company}</div>
+                    <div className="detail-item" style={{gridColumn: '1 / -1'}}><span>Company Name:</span> {selectedRow.company}</div>
                   </div>
                 </div>
               )}
 
-              {selectedRow.Type === 'Contact Enquiry' && selectedRow.Niche_Website && (
+              {selectedRow.type === 'contact_form' && selectedRow.website && (
                 <div className="detail-section">
                   <label>Enquiry Details</label>
                   <div className="detail-grid">
-                    <div className="detail-item" style={{gridColumn: '1 / -1'}}><span>Website/Niche:</span> {selectedRow.Niche_Website}</div>
+                    <div className="detail-item" style={{gridColumn: '1 / -1'}}><span>Service Interest:</span> {selectedRow.website}</div>
                   </div>
                 </div>
               )}
 
-              <div className="detail-section"><label>Message</label>
-                <div className="message-box">{selectedRow.Message}</div>
+              <div className="detail-section" style={{marginTop:'1.5rem'}}>
+                <label>Message / Additional Info</label>
+                <div className="detail-message">{selectedRow.message || 'No additional message provided.'}</div>
               </div>
             </div>
             <div className="modal-footer">

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const leadSchema = new mongoose.Schema({
-  type: { type: String, enum: ['influencer', 'brand'], required: true },
+  type: { type: String, enum: ['influencer', 'brand', 'contact_form'], required: true },
   name: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String, required: true },
