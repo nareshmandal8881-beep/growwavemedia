@@ -2624,11 +2624,13 @@ body {
   background: #0e0e12;
   border: 1px solid rgba(255,255,255,0.05);
   border-radius: 20px;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dash-table {
   width: 100%;
+  min-width: 800px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -2774,9 +2776,29 @@ body {
 
 /* Responsive Dashboard */
 @media (max-width: 1024px) {
-  .dash-sidebar { width: 280px; position: static; height: auto; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
   .dash-container { flex-direction: column; }
-  .dash-main { margin-left: 0; }
+  .dash-sidebar { 
+    width: 100%; 
+    position: static; 
+    height: auto; 
+    border-right: none; 
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+    padding: 1rem;
+  }
+  .dash-logo { margin-bottom: 1rem; }
+  .dash-nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .dash-nav-link {
+    white-space: nowrap;
+    width: auto;
+    margin-bottom: 0;
+  }
+  .dash-main { margin-left: 0; padding: 1rem; }
   .dash-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
   .search-box { width: 100%; }
 }

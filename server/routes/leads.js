@@ -23,4 +23,14 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Delete a lead
+router.delete('/:id', async (req, res) => {
+  try {
+    await Lead.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Lead deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

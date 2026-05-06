@@ -11,6 +11,17 @@ const SubmissionSchema = new mongoose.Schema({
   contentPlatform: String,
   timestamp: String,
   signatureData: String, // Base64 signature
+  signatureUrl: String, // 50KB Uploaded Image URL
+  channelName: String,
+  creatorAddress: String,
+  accountHolder: String,
+  bankName: String,
+  ifscCode: String,
+  accountNumber: String,
+  upiId: String,
+  billingPeriod: String,
+  amount: String,
+  videoType: String,
   status: { type: String, default: 'submitted_video' }, // submitted_video, approved, rejected, paid
   adminUtrId: String,
   adminProofUrl: String,
