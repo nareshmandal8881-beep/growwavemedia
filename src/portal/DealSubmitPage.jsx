@@ -55,6 +55,7 @@ export default function DealSubmitPage() {
   const [sigPreview, setSigPreview] = useState(null);
   const [sigUploadProgress, setSigUploadProgress] = useState(0);
   const [uploadedSigUrl, setUploadedSigUrl] = useState('');
+  const [subTask, setSubTask] = useState(''); // Tracking current upload task
 
   const [form, setForm] = useState({
     videoLink: '',
@@ -211,7 +212,7 @@ export default function DealSubmitPage() {
   const next = () => { if (validateStep()) setStep((s) => s + 1); };
   const back = () => setStep((s) => s - 1);
 
-  const uploadVideoFile = async () => {
+  const uploadVideoFile = async (onProgress) => {
     if (!videoFile) return uploadedVideoUrl || '';
     return new Promise((resolve, reject) => {
       const storageRef = ref(storage, `creator_videos/${id}/${Date.now()}_${videoFile.name}`);
@@ -220,8 +221,12 @@ export default function DealSubmitPage() {
         (snap) => {
           const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
           setUploadProgress(pct);
+          if (onProgress) onProgress(pct);
         },
-        reject,
+        (err) => {
+          console.error("Video Upload Error:", err);
+          reject(err);
+        },
         async () => {
           const url = await getDownloadURL(task.snapshot.ref);
           resolve(url);
@@ -233,14 +238,17 @@ export default function DealSubmitPage() {
   const handleSubmit = async () => {
     if (!validateStep()) return;
     setSubmitting(true);
+    setSubTask('Preparing...');
     try {
       let finalVideoUrl = '';
       if (uploadMode === 'file') {
-        finalVideoUrl = await uploadVideoFile();
+        setSubTask('Uploading Video...');
+        finalVideoUrl = await uploadVideoFile((p) => setSubTask(`Uploading Video ${p}%`));
       }
 
       const uploadSigFile = async () => {
         if (!sigFile) return uploadedSigUrl || '';
+        setSubTask('Uploading Signature...');
         return new Promise((resolve, reject) => {
           const storageRef = ref(storage, `creator_signatures/${id}/${Date.now()}_${sigFile.name}`);
           const task = uploadBytesResumable(storageRef, sigFile);
@@ -248,8 +256,12 @@ export default function DealSubmitPage() {
             (snap) => {
               const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
               setSigUploadProgress(pct);
+              setSubTask(`Uploading Signature ${pct}%`);
             },
-            reject,
+            (err) => {
+              console.error("Signature Upload Error:", err);
+              reject(err);
+            },
             async () => {
               const url = await getDownloadURL(task.snapshot.ref);
               resolve(url);
@@ -260,6 +272,7 @@ export default function DealSubmitPage() {
 
       const finalSigUrl = await uploadSigFile();
 
+      setSubTask('Saving Submission...');
       const subData = {
         dealId: id,
         dealTitle: deal.title,
@@ -291,12 +304,13 @@ export default function DealSubmitPage() {
         await addDoc(collection(db, 'portal_submissions'), subData);
       }
 
-      // Also update the parent deal status
+      setSubTask('Updating Deal...');
       await updateDoc(doc(db, 'portal_deals', id), {
         status: 'submitted_video',
         updatedAt: serverTimestamp()
       });
 
+      setSubTask('Syncing Profile...');
       await updateDoc(doc(db, 'portal_creators', creator.id), {
         channelName: form.channelName,
         creatorAddress: form.creatorAddress,
@@ -307,7 +321,7 @@ export default function DealSubmitPage() {
         upiId: form.upiId,
       });
 
-      // 4. GENERATE INVOICE FROM CREATOR SIDE
+      setSubTask('Generating Invoice...');
       const invId = generateInvoiceId();
       await addDoc(collection(db, 'portal_invoices'), {
         invoiceId: invId,
@@ -336,12 +350,14 @@ export default function DealSubmitPage() {
         createdAt: serverTimestamp(),
       });
 
+      setSubTask('Done!');
       setSubmitted(true);
     } catch (err) {
-      console.error(err);
+      console.error("FULL SUBMISSION ERROR:", err);
       alert('Submission failed: ' + err.message);
     } finally {
       setSubmitting(false);
+      setSubTask('');
     }
   };
 
@@ -658,12 +674,16 @@ export default function DealSubmitPage() {
                 className="portal-btn portal-btn--primary"
                 onClick={handleSubmit}
                 disabled={submitting}
+                style={{ minWidth: '160px' }}
               >
-                {submitting
-                  ? uploadMode === 'file' && uploadProgress > 0 && uploadProgress < 100
-                    ? `Uploading ${uploadProgress}%…`
-                    : <span className="portal-btn-spinner" />
-                  : '🚀 Submit Deal'}
+                {submitting ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span className="portal-btn-spinner" />
+                    <span>{subTask || 'Processing...'}</span>
+                  </div>
+                ) : (
+                  '🚀 Submit Deal'
+                )}
               </button>
             )}
           </div>
