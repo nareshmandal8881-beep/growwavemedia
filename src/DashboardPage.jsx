@@ -629,6 +629,11 @@ function SubmissionsPanel() {
     try {
       let proofUrl = '';
       if (pForm.file) {
+        if (pForm.file.size > 800 * 1024) {
+          alert("Screenshot is too large. Please upload an image under 800KB.");
+          setPaying(false);
+          return;
+        }
         proofUrl = await toBase64(pForm.file);
       }
 
@@ -778,7 +783,17 @@ function SubmissionsPanel() {
                     <div className="portal-alert portal-alert--success" style={{marginTop:'1rem'}}>
                       <strong>Paid & Invoice Generated</strong><br/>
                       UTR: {sub.adminUtrId}
-                      {sub.adminProofUrl && <div><a href={sub.adminProofUrl} target="_blank" rel="noreferrer" style={{color:'inherit',textDecoration:'underline'}}>View Payment Screenshot</a></div>}
+                      {sub.adminProofUrl && (
+                        <div style={{marginTop: '0.5rem'}}>
+                          <div style={{fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.25rem'}}>Payment Screenshot:</div>
+                          <img 
+                            src={sub.adminProofUrl} 
+                            alt="Payment Proof" 
+                            style={{maxHeight: '120px', borderRadius: '4px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)'}} 
+                            onClick={() => window.open(sub.adminProofUrl, '_blank')}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
 

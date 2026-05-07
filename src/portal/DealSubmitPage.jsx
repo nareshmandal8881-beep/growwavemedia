@@ -129,8 +129,11 @@ export default function DealSubmitPage() {
             ifscCode: sub.ifscCode || creatorData.ifscCode || '',
             accountNumber: sub.accountNumber || creatorData.accountNumber || '',
             upiId: sub.upiId || creatorData.upiId || '',
-            signatureLink: sub.signatureUrl || '',
+            signatureLink: sub.signatureUrl || creatorData.signatureUrl || '',
           }));
+          if (sub.signatureData || creatorData.signatureData) {
+            setUploadedSigUrl(sub.signatureData || creatorData.signatureData);
+          }
         } else {
           // Prefill from creator profile
           setForm((f) => ({
@@ -142,7 +145,11 @@ export default function DealSubmitPage() {
             ifscCode: creatorData.ifscCode || '',
             accountNumber: creatorData.accountNumber || '',
             upiId: creatorData.upiId || '',
+            signatureLink: creatorData.signatureUrl || '',
           }));
+          if (creatorData.signatureData) {
+            setUploadedSigUrl(creatorData.signatureData);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -170,6 +177,7 @@ export default function DealSubmitPage() {
       setSigFile(file);
       setSigPreview(URL.createObjectURL(file));
       setUploadedSigUrl('');
+      setForm(f => ({ ...f, signatureLink: '' }));
     }
   };
 
