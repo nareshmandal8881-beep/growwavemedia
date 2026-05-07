@@ -6,12 +6,11 @@ import {
   PlusCircle, CheckCircle, XCircle, FileText,
   ChevronDown, ChevronUp, Eye, Receipt, Download
 } from 'lucide-react';
-import { db, auth, storage } from './firebase';
+import { db, auth } from './firebase';
 import { 
   collection, getDocs, doc, setDoc, addDoc, updateDoc, deleteDoc, 
   query, where, orderBy, serverTimestamp, getDoc 
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import StatusBadge from './portal/components/StatusBadge';
 import CommentThread from './portal/components/CommentThread';
@@ -588,6 +587,14 @@ function SubmissionsPanel() {
   const [paymentForms, setPaymentForms] = useState({});
   const [paying, setPaying] = useState(false);
 
+  // Helper to convert file to Base64
+  const toBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+  });
+
   const fetchSubs = async () => {
     setLoading(true);
     try {
@@ -622,9 +629,7 @@ function SubmissionsPanel() {
     try {
       let proofUrl = '';
       if (pForm.file) {
-        const storageRef = ref(storage, `admin_payments/${sub.id}/${Date.now()}_${pForm.file.name}`);
-        await uploadBytes(storageRef, pForm.file);
-        proofUrl = await getDownloadURL(storageRef);
+        proofUrl = await toBase64(pForm.file);
       }
 
       // 1. Update submission in Firestore

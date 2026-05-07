@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { auth, db, storage } from '../firebase';
+import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { 
   doc, getDoc, updateDoc, setDoc, collection, query, where, 
   getDocs, serverTimestamp, addDoc 
 } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+// Firebase Storage not used — images stored as Base64 in Firestore
 import { Helmet } from 'react-helmet-async';
 import CommentThread from './components/CommentThread';
 import {
@@ -49,7 +49,15 @@ export default function DealSubmitPage() {
   const [sigPreview, setSigPreview] = useState(null);
   const [sigUploadProgress, setSigUploadProgress] = useState(0);
   const [uploadedSigUrl, setUploadedSigUrl] = useState('');
-  const [subTask, setSubTask] = useState(''); 
+  const [subTask, setSubTask] = useState('');
+
+  // Convert image file to Base64 string (stored in Firestore, no Storage needed)
+  const toBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+  });
 
   const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 
@@ -196,33 +204,17 @@ export default function DealSubmitPage() {
     if (!validateStep()) return;
     setSubmitting(true);
     try {
-      let finalVideoUrl = '';
+      // Convert signature image to Base64 (stored in Firestore, no paid Storage needed)
+      let finalSigData = uploadedSigUrl || ''; // existing saved base64
+      let finalSigUrl = form.signatureLink || ''; // Google Drive link fallback
 
-      const uploadSigFile = async () => {
-        if (!sigFile) return uploadedSigUrl || '';
-        setSubTask('Uploading Signature...');
-        return new Promise((resolve, reject) => {
-          const storageRef = ref(storage, `creator_signatures/${id}/${Date.now()}_${sigFile.name}`);
-          const task = uploadBytesResumable(storageRef, sigFile);
-          task.on('state_changed',
-            (snap) => {
-              const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-              setSigUploadProgress(pct);
-              setSubTask(`Uploading Signature ${pct}%`);
-            },
-            (err) => {
-              console.error("Signature Upload Error:", err);
-              reject(err);
-            },
-            async () => {
-              const url = await getDownloadURL(task.snapshot.ref);
-              resolve(url);
-            }
-          );
-        });
-      };
-
-      const finalSigUrl = await uploadSigFile();
+      if (sigFile) {
+        setSubTask('Processing Signature...');
+        setSigUploadProgress(50);
+        finalSigData = await toBase64(sigFile);
+        setSigUploadProgress(100);
+        finalSigUrl = ''; // use base64, not link
+      }
 
       setSubTask('Saving Submission...');
       const subData = {
@@ -243,7 +235,7 @@ export default function DealSubmitPage() {
         accountNumber: form.accountNumber,
         upiId: form.upiId,
         billingPeriod: form.billingPeriod,
-        signatureData: '',
+        signatureData: finalSigData,
         signatureUrl: finalSigUrl,
         amount: deal.amount || '',
         videoType: deal.videoType || '',
@@ -275,6 +267,7 @@ export default function DealSubmitPage() {
         ifscCode: form.ifscCode,
         accountNumber: form.accountNumber,
         upiId: form.upiId,
+        signatureData: finalSigData,
         signatureUrl: finalSigUrl,
         updatedAt: serverTimestamp()
       });
@@ -296,6 +289,7 @@ export default function DealSubmitPage() {
         amount: deal.amount,
         date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
         status: 'pending_payment',
+        signatureData: finalSigData,
         signatureUrl: finalSigUrl,
         createdAt: serverTimestamp()
       });
