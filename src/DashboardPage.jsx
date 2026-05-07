@@ -658,6 +658,12 @@ function SubmissionsPanel() {
         });
       }
 
+      // 3. Update Deal status to completed
+      await updateDoc(doc(db, 'portal_deals', sub.dealId), {
+        status: 'completed',
+        updatedAt: serverTimestamp()
+      });
+
       alert(`✅ Paid & Approved!`);
       fetchSubs();
     } catch (err) {

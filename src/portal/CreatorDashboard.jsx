@@ -314,6 +314,11 @@ export default function CreatorDashboard() {
                                 ⏳ Payment under review
                               </span>
                             )}
+                            {deal.status === 'completed' && (
+                              <span className="portal-deal-submitted-note" style={{ color: '#a78bfa' }}>
+                                ✓ Deal Completed & Paid
+                              </span>
+                            )}
                           </div>
                         </div>
                       ))}
