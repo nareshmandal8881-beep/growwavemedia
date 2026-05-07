@@ -33,13 +33,19 @@ function LeadsPanel({ activeTab }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
+      // Fetch all leads without strict ordering first to ensure visibility
+      const q = query(collection(db, 'leads'));
       const querySnapshot = await getDocs(q);
-      const leads = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
-      }));
+      const leads = querySnapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          ...d,
+          createdAt: d.createdAt?.toDate() || new Date()
+        };
+      });
+      // Sort manually in JS to handle missing timestamps
+      leads.sort((a, b) => b.createdAt - a.createdAt);
       setData(leads);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -546,12 +552,14 @@ function SubmissionsPanel() {
   const fetchSubs = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
+      const q = query(collection(db, 'submissions'));
       const querySnapshot = await getDocs(q);
       const data = querySnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date()
       }));
+      data.sort((a, b) => b.createdAt - a.createdAt);
       setSubs(data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -769,11 +777,13 @@ function InvoicesPanel() {
     (async () => {
       setLoading(true);
       try {
-        const querySnapshot = await getDocs(query(collection(db, 'invoices'), orderBy('createdAt', 'desc')));
+        const querySnapshot = await getDocs(collection(db, 'invoices'));
         const data = querySnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date()
         }));
+        data.sort((a, b) => b.createdAt - a.createdAt);
         setInvoices(data);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
