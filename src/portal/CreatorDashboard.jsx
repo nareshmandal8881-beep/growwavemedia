@@ -619,10 +619,11 @@ export default function CreatorDashboard() {
                   </div>
                 </section>
               )}
-            </>
-          )}
-        </main>
-      </div>
-    </>
-  );
+            </div>
+          </>
+        )}
+      </main>
+    </div>
+  </>
+);
 }
