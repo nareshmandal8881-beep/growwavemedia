@@ -17,7 +17,7 @@ export default function CreatorDashboard() {
   const [creator, setCreator] = useState(null);
   const [deals, setDeals] = useState([]);
   const [invoices, setInvoices] = useState([]);
-  const [tab, setTab] = useState('portal_deals');
+  const [tab, setTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({ 
@@ -252,10 +252,16 @@ export default function CreatorDashboard() {
           )}
           <nav className="portal-sidebar__nav">
             <button
+              className={`portal-nav-btn ${tab === 'overview' ? 'active' : ''}`}
+              onClick={() => setTab('overview')}
+            >
+              <LayoutDashboard size={18} /><span>Overview</span>
+            </button>
+            <button
               className={`portal-nav-btn ${tab === 'portal_deals' ? 'active' : ''}`}
               onClick={() => setTab('portal_deals')}
             >
-              <LayoutDashboard size={18} /><span>My Deals</span>
+              <RefreshCw size={18} /><span>My Deals</span>
             </button>
             <button
               className={`portal-nav-btn ${tab === 'portal_invoices' ? 'active' : ''}`}
@@ -298,332 +304,337 @@ export default function CreatorDashboard() {
                 </button>
               </div>
 
-              {/* Stats */}
-              {/* Agency Notice Board */}
-          <div className="portal-notice-board" style={{ marginBottom: '2.5rem' }}>
-            <div className="portal-notice-card">
-              <div className="portal-notice-icon">
-                <RefreshCw size={20} className="spin-slow" />
-              </div>
-              <div className="portal-notice-content">
-                <h4>Grow Wave Media • Updates</h4>
-                <p>Welcome to your new premium dashboard! You can now track your revenue trends and manage your signatures directly from your profile.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="portal-stats">
-            {stats.map((s, i) => (
-                  <div key={i} className="portal-stat-card">
-                    <div className="portal-stat-card__icon" style={{ color: s.color }}>
-                      {s.icon}
+              {/* Tab Content Mapping */}
+              <div className="portal-tab-content">
+                
+                {/* 1. OVERVIEW TAB */}
+                {tab === 'overview' && (
+                  <>
+                    {/* Agency Notice Board */}
+                    <div className="portal-notice-board" style={{ marginBottom: '2.5rem' }}>
+                      <div className="portal-notice-card">
+                        <div className="portal-notice-icon">
+                          <RefreshCw size={20} className="spin-slow" />
+                        </div>
+                        <div className="portal-notice-content">
+                          <h4>Grow Wave Media • Updates</h4>
+                          <p>Welcome to your new premium dashboard! You can now track your revenue trends and manage your signatures directly from your profile.</p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="portal-stat-card__value" style={{ color: s.color }}>{s.value}</p>
-                      <p className="portal-stat-card__label">{s.label}</p>
-                    </div>
-                  </div>
-                ))}
-          </div>
 
-          {/* Revenue Insights Chart */}
-          <div className="portal-card-premium" style={{ marginBottom: '2.5rem', padding: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginBottom: '0.25rem' }}>Revenue Insights</h3>
-                <p style={{ color: 'var(--portal-muted)', fontSize: '0.85rem' }}>Monthly earnings performance for {new Date().getFullYear()}</p>
-              </div>
-              <TrendingUp color="var(--portal-primary)" size={24} />
-            </div>
-            
-            <div className="revenue-chart-container">
-              {earningsByMonth.map((d, i) => (
-                <div key={d.month} className="revenue-chart-col">
-                  <div className="revenue-chart-bar-wrap">
-                    <div 
-                      className="revenue-chart-bar" 
-                      style={{ height: `${(d.amount / maxEarning) * 100}%` }}
-                    >
-                      {d.amount > 0 && <span className="revenue-chart-tooltip">₹{d.amount.toLocaleString()}</span>}
-                    </div>
-                  </div>
-                  <span className="revenue-chart-label">{d.month}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="portal-grid">
-
-              {/* Deals Tab */}
-              {tab === 'portal_deals' && (
-                <section className="portal-section">
-                  <h2 className="portal-section__title">Assigned Deals</h2>
-                  {deals.length === 0 ? (
-                    <div className="portal-empty">
-                      <PlusCircle size={40} />
-                      <p>No deals assigned yet. Check back soon.</p>
-                    </div>
-                  ) : (
-                    <div className="portal-deals-grid">
-                      {deals.map((deal) => (
-                        <div key={deal.id} className="portal-deal-card">
-                          <div className="portal-deal-card__top">
-                            <h3>{deal.title}</h3>
-                            <StatusBadge status={deal.status} />
+                    <div className="portal-stats">
+                      {stats.map((s, i) => (
+                        <div key={i} className="portal-stat-card">
+                          <div className="portal-stat-card__icon" style={{ color: s.color }}>
+                            {s.icon}
                           </div>
-                          <div className="portal-deal-card__meta">
-                            <span>💰 ₹{Number(deal.amount || 0).toLocaleString('en-IN')}</span>
-                            <span>📱 {deal.platform || '—'}</span>
-                            {deal.deadline && <span>📅 {deal.deadline}</span>}
-                          </div>
-                          <p className="portal-deal-card__desc">{deal.deliverables}</p>
-                          <div className="portal-deal-card__actions">
-                            {(deal.status === 'locked' || deal.status === 'pending') && (
-                              <div className="portal-deal-locked-state">
-                                <span className="portal-deal-locked-icon">🔒</span>
-                                <span>Awaiting admin approval to unlock</span>
-                              </div>
-                            )}
-                            {deal.status === 'approved' && (
-                              <Link
-                                to={`/portal/deal/${deal.id}`}
-                                className="portal-btn portal-btn--primary"
-                              >
-                                Submit Video →
-                              </Link>
-                            )}
-                            {(deal.status === 'submitted' || deal.status === 'submitted_video') && (
-                              <span className="portal-deal-submitted-note">
-                                ✓ Video Submitted — awaiting admin review/payment
-                              </span>
-                            )}
-                            {deal.status === 'rejected' && (
-                              <Link
-                                to={`/portal/deal/${deal.id}`}
-                                className="portal-btn portal-btn--danger"
-                              >
-                                Resubmit Video →
-                              </Link>
-                            )}
-                            {deal.status === 'payment_review' && (
-                              <span className="portal-deal-submitted-note" style={{ color: '#f97316' }}>
-                                ⏳ Payment under review
-                              </span>
-                            )}
-                            {deal.status === 'completed' && (
-                              <span className="portal-deal-submitted-note" style={{ color: '#a78bfa' }}>
-                                ✓ Deal Completed & Paid
-                              </span>
-                            )}
+                          <div>
+                            <p className="portal-stat-card__value" style={{ color: s.color }}>{s.value}</p>
+                            <p className="portal-stat-card__label">{s.label}</p>
                           </div>
                         </div>
                       ))}
                     </div>
-                  )}
-                </section>
-              )}
 
-              {/* Invoices Tab */}
-              {tab === 'portal_invoices' && (
-                <section className="portal-section">
-                  <h2 className="portal-section__title">My Invoices</h2>
-                  {invoices.length === 0 ? (
-                    <div className="portal-empty">
-                      <FileText size={40} />
-                      <p>No invoices yet. Complete a deal to generate your first invoice.</p>
+                    {/* Revenue Insights Chart */}
+                    <div className="portal-card-premium" style={{ marginTop: '2.5rem', padding: '2rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div>
+                          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginBottom: '0.25rem' }}>Revenue Insights</h3>
+                          <p style={{ color: 'var(--portal-muted)', fontSize: '0.85rem' }}>Monthly earnings performance for {new Date().getFullYear()}</p>
+                        </div>
+                        <TrendingUp color="var(--portal-primary)" size={24} />
+                      </div>
+                      
+                      <div className="revenue-chart-container">
+                        {earningsByMonth.map((d, i) => (
+                          <div key={d.month} className="revenue-chart-col">
+                            <div className="revenue-chart-bar-wrap">
+                              <div 
+                                className="revenue-chart-bar" 
+                                style={{ height: `${(d.amount / maxEarning) * 100}%` }}
+                              >
+                                {d.amount > 0 && <span className="revenue-chart-tooltip">₹{d.amount.toLocaleString()}</span>}
+                              </div>
+                            </div>
+                            <span className="revenue-chart-label">{d.month}</span>
+                          </div>
+                        ))}
                     </div>
-                  ) : (
-                    <div className="portal-table-wrap">
-                      <table className="portal-table">
-                        <thead>
-                          <tr>
-                            <th>Invoice ID</th>
-                            <th>Deal</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {invoices.map((inv) => (
-                            <tr key={inv.id}>
-                              <td className="portal-mono">{inv.invoiceId}</td>
-                              <td>{inv.dealTitle}</td>
-                              <td>₹{Number(inv.amount || 0).toLocaleString('en-IN')}</td>
-                              <td>{inv.date}</td>
-                              <td><StatusBadge status={inv.status} /></td>
-                              <td>
-                                <div style={{display:'flex', gap:'0.5rem'}}>
-                                  <Link
-                                    to={`/portal/invoice/${inv.id}`}
-                                    className="portal-btn portal-btn--sm portal-btn--ghost"
-                                  >
-                                    <Eye size={14}/> {inv.status === 'pending_signature' ? 'Sign' : 'View'}
-                                  </Link>
-                                  <button 
-                                    className="portal-btn portal-btn--sm portal-btn--ghost" 
-                                    style={{color:'var(--portal-danger)', borderColor:'rgba(239,68,68,0.2)'}}
-                                    onClick={() => handleDeleteInvoice(inv.id)}
-                                  >
-                                    <Trash2 size={14}/>
-                                  </button>
+                  </>
+                )}
+
+                {/* 2. DEALS TAB */}
+                {tab === 'portal_deals' && (
+                  <section className="portal-section">
+                    <h2 className="portal-section__title">Assigned Deals</h2>
+                    {deals.length === 0 ? (
+                      <div className="portal-empty">
+                        <PlusCircle size={40} />
+                        <p>No deals assigned yet. Check back soon.</p>
+                      </div>
+                    ) : (
+                      <div className="portal-deals-grid">
+                        {deals.map((deal) => (
+                          <div key={deal.id} className="portal-deal-card">
+                            <div className="portal-deal-card__top">
+                              <h3>{deal.title}</h3>
+                              <StatusBadge status={deal.status} />
+                            </div>
+                            <div className="portal-deal-card__meta">
+                              <span>💰 ₹{Number(deal.amount || 0).toLocaleString('en-IN')}</span>
+                              <span>📱 {deal.platform || '—'}</span>
+                              {deal.deadline && <span>📅 {deal.deadline}</span>}
+                            </div>
+                            <p className="portal-deal-card__desc">{deal.deliverables}</p>
+                            <div className="portal-deal-card__actions">
+                              {(deal.status === 'locked' || deal.status === 'pending') && (
+                                <div className="portal-deal-locked-state">
+                                  <span className="portal-deal-locked-icon">🔒</span>
+                                  <span>Awaiting admin approval to unlock</span>
                                 </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </section>
-              )}
-
-              {tab === 'profile' && creator && (
-                <section className="portal-section">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h2 className="portal-section__title" style={{ marginBottom: 0 }}>My Profile</h2>
-                    {!isEditingProfile && (
-                      <button className="portal-btn portal-btn--ghost" onClick={() => setIsEditingProfile(true)}>
-                        Edit Details
-                      </button>
+                              )}
+                              {deal.status === 'approved' && (
+                                <Link
+                                  to={`/portal/deal/${deal.id}`}
+                                  className="portal-btn portal-btn--primary"
+                                >
+                                  Submit Video →
+                                </Link>
+                              )}
+                              {(deal.status === 'submitted' || deal.status === 'submitted_video') && (
+                                <span className="portal-deal-submitted-note">
+                                  ✓ Video Submitted — awaiting admin review/payment
+                                </span>
+                              )}
+                              {deal.status === 'rejected' && (
+                                <Link
+                                  to={`/portal/deal/${deal.id}`}
+                                  className="portal-btn portal-btn--danger"
+                                >
+                                  Resubmit Video →
+                                </Link>
+                              )}
+                              {deal.status === 'payment_review' && (
+                                <span className="portal-deal-submitted-note" style={{ color: '#f97316' }}>
+                                  ⏳ Payment under review
+                                </span>
+                              )}
+                              {deal.status === 'completed' && (
+                                <span className="portal-deal-submitted-note" style={{ color: '#a78bfa' }}>
+                                  ✓ Deal Completed & Paid
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
-                  </div>
-                  
-                  <div className="portal-profile-card">
-                    <div className="portal-avatar portal-avatar--lg">
-                      {creator.name?.charAt(0).toUpperCase()}
+                  </section>
+                )}
+
+                {/* 3. INVOICES TAB */}
+                {tab === 'portal_invoices' && (
+                  <section className="portal-section">
+                    <h2 className="portal-section__title">My Invoices</h2>
+                    {invoices.length === 0 ? (
+                      <div className="portal-empty">
+                        <FileText size={40} />
+                        <p>No invoices yet. Complete a deal to generate your first invoice.</p>
+                      </div>
+                    ) : (
+                      <div className="portal-table-wrap">
+                        <table className="portal-table">
+                          <thead>
+                            <tr>
+                              <th>Invoice ID</th>
+                              <th>Deal</th>
+                              <th>Amount</th>
+                              <th>Date</th>
+                              <th>Status</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {invoices.map((inv) => (
+                              <tr key={inv.id}>
+                                <td className="portal-mono">{inv.invoiceId}</td>
+                                <td>{inv.dealTitle}</td>
+                                <td>₹{Number(inv.amount || 0).toLocaleString('en-IN')}</td>
+                                <td>{inv.date}</td>
+                                <td><StatusBadge status={inv.status} /></td>
+                                <td>
+                                  <div style={{display:'flex', gap:'0.5rem'}}>
+                                    <Link
+                                      to={`/portal/invoice/${inv.id}`}
+                                      className="portal-btn portal-btn--sm portal-btn--ghost"
+                                    >
+                                      <Eye size={14}/> {inv.status === 'pending_signature' ? 'Sign' : 'View'}
+                                    </Link>
+                                    <button 
+                                      className="portal-btn portal-btn--sm portal-btn--ghost" 
+                                      style={{color:'var(--portal-danger)', borderColor:'rgba(239,68,68,0.2)'}}
+                                      onClick={() => handleDeleteInvoice(inv.id)}
+                                    >
+                                      <Trash2 size={14}/>
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </section>
+                )}
+
+                {/* 4. PROFILE TAB */}
+                {tab === 'profile' && creator && (
+                  <section className="portal-section">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                      <h2 className="portal-section__title" style={{ marginBottom: 0 }}>My Profile</h2>
+                      {!isEditingProfile && (
+                        <button className="portal-btn portal-btn--ghost" onClick={() => setIsEditingProfile(true)}>
+                          Edit Details
+                        </button>
+                      )}
                     </div>
                     
-                    {isEditingProfile ? (
-                      <form onSubmit={handleUpdateProfile} className="admin-form-grid" style={{ marginTop: '2rem' }}>
-                        <div className="portal-field">
-                          <label>Full Name</label>
-                          <input type="text" value={creator.name} disabled style={{ opacity: 0.5 }} />
-                        </div>
-                        <div className="portal-field">
-                          <label>Email</label>
-                          <input type="email" value={creator.email} disabled style={{ opacity: 0.5 }} />
-                        </div>
-                        <div className="portal-field">
-                          <label>Phone</label>
-                          <input type="tel" value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} placeholder="+91..." />
-                        </div>
-                        <div className="portal-field">
-                          <label>Channel / Creator Name</label>
-                          <input type="text" value={profileForm.channelName} onChange={e => setProfileForm({...profileForm, channelName: e.target.value})} placeholder="e.g. CarryMinati" />
-                        </div>
-                        <div className="portal-field">
-                          <label>YouTube Link</label>
-                          <input type="url" value={profileForm.youtubeLink} onChange={e => setProfileForm({...profileForm, youtubeLink: e.target.value})} placeholder="https://youtube.com/@username" />
-                        </div>
-                        <div className="portal-field">
-                          <label>Instagram Link</label>
-                          <input type="url" value={profileForm.instagramLink} onChange={e => setProfileForm({...profileForm, instagramLink: e.target.value})} placeholder="https://instagram.com/username" />
-                        </div>
-                        <div className="portal-field" style={{ gridColumn: '1 / -1' }}>
-                          <label>Billing Address</label>
-                          <textarea 
-                            rows="2" 
-                            value={profileForm.creatorAddress} 
-                            onChange={e => setProfileForm({...profileForm, creatorAddress: e.target.value})}
-                            placeholder="Full address for invoice..."
-                          />
-                        </div>
-                        <div className="portal-field">
-                          <label>Account Holder Name</label>
-                          <input type="text" value={profileForm.accountHolder} onChange={e => setProfileForm({...profileForm, accountHolder: e.target.value})} />
-                        </div>
-                        <div className="portal-field">
-                          <label>Bank Name</label>
-                          <input type="text" value={profileForm.bankName} onChange={e => setProfileForm({...profileForm, bankName: e.target.value})} />
-                        </div>
-                        <div className="portal-field">
-                          <label>IFSC Code</label>
-                          <input type="text" value={profileForm.ifscCode} onChange={e => setProfileForm({...profileForm, ifscCode: e.target.value})} />
-                        </div>
-                        <div className="portal-field">
-                          <label>Account Number</label>
-                          <input type="text" value={profileForm.accountNumber} onChange={e => setProfileForm({...profileForm, accountNumber: e.target.value})} />
-                        </div>
-                        <div className="portal-field">
-                          <label>UPI ID</label>
-                          <input type="text" value={profileForm.upiId} onChange={e => setProfileForm({...profileForm, upiId: e.target.value})} />
-                        </div>
-                        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                          <button type="submit" className="portal-btn portal-btn--primary" disabled={savingProfile}>
-                            {savingProfile ? 'Saving...' : 'Save Changes'}
-                          </button>
-                          <button type="button" className="portal-btn portal-btn--ghost" onClick={() => {
-                            setIsEditingProfile(false);
-                            setProfileForm({
-                              phone: creator.phone || '',
-                              channelName: creator.channelName || '',
-                              youtubeLink: creator.youtubeLink || '',
-                              instagramLink: creator.instagramLink || '',
-                              paymentDetails: creator.paymentDetails || ''
-                            });
-                          }}>
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <>
-                         <div className="portal-profile-grid">
-                           {[
-                             ['Full Name', creator.name],
-                             ['Email', creator.email],
-                             ['Phone', creator.phone || '—'],
-                             ['Channel Name', creator.channelName || '—'],
-                             ['YouTube Link', creator.youtubeLink || '—'],
-                             ['Instagram Link', creator.instagramLink || '—'],
-                             ['Billing Address', creator.creatorAddress || '—'],
-                             ['Account Holder', creator.accountHolder || '—'],
-                             ['Bank Name', creator.bankName || '—'],
-                             ['IFSC Code', creator.ifscCode || '—'],
-                             ['A/C Number', creator.accountNumber || '—'],
-                             ['UPI ID', creator.upiId || '—'],
-                             ['Joined', creator.createdAt?.toDate
-                               ? creator.createdAt.toDate().toLocaleDateString('en-IN')
-                               : '—'],
-                           ].map(([label, val]) => (
-                             <div key={label} className="portal-profile-item">
-                               <span className="portal-profile-item__label">{label}</span>
-                               <span className="portal-profile-item__val" style={{wordBreak: 'break-all'}}>{val}</span>
-                             </div>
-                           ))}
-                         </div>
-
-                        {/* Signature Preview in Profile */}
-                        {(creator.signatureData || creator.signatureUrl) && (
-                          <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <span className="portal-profile-item__label" style={{ display: 'block', marginBottom: '1rem' }}>Digital Signature on File</span>
-                            {creator.signatureData ? (
-                              <img src={creator.signatureData} alt="Saved Signature" style={{ maxHeight: '80px', background: '#fff', padding: '8px', borderRadius: '4px', display: 'block' }} />
-                            ) : (
-                              <a href={creator.signatureUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--portal-primary)', fontSize: '0.9rem' }}>🔗 View Signature Link</a>
-                            )}
-                            <p style={{ fontSize: '0.75rem', color: 'var(--portal-muted)', marginTop: '1rem' }}>
-                              This signature is automatically used for all your deal submissions. You can update it during any deal submission process.
-                            </p>
+                    <div className="portal-profile-card">
+                      <div className="portal-avatar portal-avatar--lg">
+                        {creator.name?.charAt(0).toUpperCase()}
+                      </div>
+                      
+                      {isEditingProfile ? (
+                        <form onSubmit={handleUpdateProfile} className="admin-form-grid" style={{ marginTop: '2rem' }}>
+                          <div className="portal-field">
+                            <label>Full Name</label>
+                            <input type="text" value={creator.name} disabled style={{ opacity: 0.5 }} />
                           </div>
-                        )}
-                        <p className="portal-profile-note" style={{ marginTop: '2rem' }}>
-                          Need to change your name or email? Contact admin at{' '}
-                          <a href="mailto:growwavemedia@gmail.com">growwavemedia@gmail.com</a>
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </section>
-              )}
-            </div>
-          </>
-        )}
-      </main>
-    </div>
-  </>
-);
+                          <div className="portal-field">
+                            <label>Email</label>
+                            <input type="email" value={creator.email} disabled style={{ opacity: 0.5 }} />
+                          </div>
+                          <div className="portal-field">
+                            <label>Phone</label>
+                            <input type="tel" value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} placeholder="+91..." />
+                          </div>
+                          <div className="portal-field">
+                            <label>Channel / Creator Name</label>
+                            <input type="text" value={profileForm.channelName} onChange={e => setProfileForm({...profileForm, channelName: e.target.value})} placeholder="e.g. CarryMinati" />
+                          </div>
+                          <div className="portal-field">
+                            <label>YouTube Link</label>
+                            <input type="url" value={profileForm.youtubeLink} onChange={e => setProfileForm({...profileForm, youtubeLink: e.target.value})} placeholder="https://youtube.com/@username" />
+                          </div>
+                          <div className="portal-field">
+                            <label>Instagram Link</label>
+                            <input type="url" value={profileForm.instagramLink} onChange={e => setProfileForm({...profileForm, instagramLink: e.target.value})} placeholder="https://instagram.com/username" />
+                          </div>
+                          <div className="portal-field" style={{ gridColumn: '1 / -1' }}>
+                            <label>Billing Address</label>
+                            <textarea 
+                              rows="2" 
+                              value={profileForm.creatorAddress} 
+                              onChange={e => setProfileForm({...profileForm, creatorAddress: e.target.value})}
+                              placeholder="Full address for invoice..."
+                            />
+                          </div>
+                          <div className="portal-field">
+                            <label>Account Holder Name</label>
+                            <input type="text" value={profileForm.accountHolder} onChange={e => setProfileForm({...profileForm, accountHolder: e.target.value})} />
+                          </div>
+                          <div className="portal-field">
+                            <label>Bank Name</label>
+                            <input type="text" value={profileForm.bankName} onChange={e => setProfileForm({...profileForm, bankName: e.target.value})} />
+                          </div>
+                          <div className="portal-field">
+                            <label>IFSC Code</label>
+                            <input type="text" value={profileForm.ifscCode} onChange={e => setProfileForm({...profileForm, ifscCode: e.target.value})} />
+                          </div>
+                          <div className="portal-field">
+                            <label>Account Number</label>
+                            <input type="text" value={profileForm.accountNumber} onChange={e => setProfileForm({...profileForm, accountNumber: e.target.value})} />
+                          </div>
+                          <div className="portal-field">
+                            <label>UPI ID</label>
+                            <input type="text" value={profileForm.upiId} onChange={e => setProfileForm({...profileForm, upiId: e.target.value})} />
+                          </div>
+                          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                            <button type="submit" className="portal-btn portal-btn--primary" disabled={savingProfile}>
+                              {savingProfile ? 'Saving...' : 'Save Changes'}
+                            </button>
+                            <button type="button" className="portal-btn portal-btn--ghost" onClick={() => {
+                              setIsEditingProfile(false);
+                              setProfileForm({
+                                phone: creator.phone || '',
+                                channelName: creator.channelName || '',
+                                youtubeLink: creator.youtubeLink || '',
+                                instagramLink: creator.instagramLink || '',
+                                paymentDetails: creator.paymentDetails || ''
+                              });
+                            }}>
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <>
+                           <div className="portal-profile-grid">
+                             {[
+                               ['Full Name', creator.name],
+                               ['Email', creator.email],
+                               ['Phone', creator.phone || '—'],
+                               ['Channel Name', creator.channelName || '—'],
+                               ['YouTube Link', creator.youtubeLink || '—'],
+                               ['Instagram Link', creator.instagramLink || '—'],
+                               ['Billing Address', creator.creatorAddress || '—'],
+                               ['Account Holder', creator.accountHolder || '—'],
+                               ['Bank Name', creator.bankName || '—'],
+                               ['IFSC Code', creator.ifscCode || '—'],
+                               ['A/C Number', creator.accountNumber || '—'],
+                               ['UPI ID', creator.upiId || '—'],
+                               ['Joined', creator.createdAt?.toDate
+                                 ? creator.createdAt.toDate().toLocaleDateString('en-IN')
+                                 : '—'],
+                             ].map(([label, val]) => (
+                               <div key={label} className="portal-profile-item">
+                                 <span className="portal-profile-item__label">{label}</span>
+                                 <span className="portal-profile-item__val" style={{wordBreak: 'break-all'}}>{val}</span>
+                               </div>
+                             ))}
+                           </div>
+
+                          {/* Signature Preview in Profile */}
+                          {(creator.signatureData || creator.signatureUrl) && (
+                            <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                              <span className="portal-profile-item__label" style={{ display: 'block', marginBottom: '1rem' }}>Digital Signature on File</span>
+                              {creator.signatureData ? (
+                                <img src={creator.signatureData} alt="Saved Signature" style={{ maxHeight: '80px', background: '#fff', padding: '8px', borderRadius: '4px', display: 'block' }} />
+                              ) : (
+                                <a href={creator.signatureUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--portal-primary)', fontSize: '0.9rem' }}>🔗 View Signature Link</a>
+                              )}
+                              <p style={{ fontSize: '0.75rem', color: 'var(--portal-muted)', marginTop: '1rem' }}>
+                                This signature is automatically used for all your deal submissions. You can update it during any deal submission process.
+                              </p>
+                            </div>
+                          )}
+                          <p className="portal-profile-note" style={{ marginTop: '2rem' }}>
+                            Need to change your name or email? Contact admin at{' '}
+                            <a href="mailto:growwavemedia@gmail.com">growwavemedia@gmail.com</a>
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </section>
+                )}
+              </div>
+            </>
+          )}
+        </main>
+      </div>
+    </>
+  );
 }
