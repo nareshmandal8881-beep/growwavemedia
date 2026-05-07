@@ -361,6 +361,7 @@ export default function CreatorDashboard() {
                             <span className="revenue-chart-label">{d.month}</span>
                           </div>
                         ))}
+                      </div>
                     </div>
                   </>
                 )}
