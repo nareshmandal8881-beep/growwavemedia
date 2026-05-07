@@ -240,11 +240,19 @@ function CreatorsPanel() {
   const fetchCreators = async () => {
     setLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, 'portal_creators'));
-      const data = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const q = query(collection(db, 'portal_creators'));
+      const querySnapshot = await getDocs(q);
+      const data = querySnapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          ...d,
+          name: d.Name || d.name || '—',
+          email: d.Email || d.email || '—',
+          phone: d.Phone || d.phone || '—',
+          channelName: d.ChannelName || d.channelName || d.channel_name || '—'
+        };
+      });
       setCreators(data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -415,8 +423,23 @@ function DealsPanel() {
         getDocs(collection(db, 'portal_deals')),
         getDocs(collection(db, 'portal_creators'))
       ]);
-      const dData = dSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const cData = cSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const dData = dSnap.docs.map(doc => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          ...d,
+          title: d.Title || d.title || 'Untitled Deal',
+          creatorId: d.CreatorId || d.creatorId || '',
+          creatorName: d.CreatorName || d.creatorName || d.Name || d.name || '',
+          status: d.Status || d.status || 'locked',
+          amount: d.Amount || d.amount || 0
+        };
+      });
+      const cData = cSnap.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data(),
+        name: doc.data().Name || doc.data().name || '—'
+      }));
       setDeals(dData);
       setCreators(cData);
     } catch (err) { console.error(err); }
@@ -559,11 +582,17 @@ function SubmissionsPanel() {
     try {
       const q = query(collection(db, 'portal_submissions'));
       const querySnapshot = await getDocs(q);
-      const data = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
-      }));
+      const data = querySnapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          ...d,
+          status: d.Status || d.status || 'pending',
+          creatorId: d.CreatorId || d.creatorId || '',
+          dealId: d.DealId || d.dealId || '',
+          createdAt: d.createdAt?.toDate() || (d.Date ? new Date(d.Date) : new Date())
+        };
+      });
       data.sort((a, b) => b.createdAt - a.createdAt);
       setSubs(data);
     } catch (err) { console.error(err); }
@@ -783,11 +812,17 @@ function InvoicesPanel() {
       setLoading(true);
       try {
         const querySnapshot = await getDocs(collection(db, 'portal_invoices'));
-        const data = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate() || new Date()
-        }));
+        const data = querySnapshot.docs.map(doc => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            ...d,
+            status: d.Status || d.status || 'unpaid',
+            creatorName: d.CreatorName || d.creatorName || '—',
+            amount: d.Amount || d.amount || 0,
+            createdAt: d.createdAt?.toDate() || (d.Date ? new Date(d.Date) : new Date())
+          };
+        });
         data.sort((a, b) => b.createdAt - a.createdAt);
         setInvoices(data);
       } catch (err) { console.error(err); }

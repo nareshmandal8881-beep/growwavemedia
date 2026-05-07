@@ -4,7 +4,7 @@ import { auth, db } from '../firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { 
   doc, getDoc, updateDoc, collection, query, where, 
-  getDocs, orderBy, serverTimestamp 
+  getDocs, orderBy, serverTimestamp, or 
 } from 'firebase/firestore';
 import { Helmet } from 'react-helmet-async';
 import StatusBadge from './components/StatusBadge';
@@ -82,18 +82,49 @@ export default function CreatorDashboard() {
           upiId: creatorData.upiId || ''
         });
 
-        // 2. Fetch assigned deals from Firestore (using document ID which might be the old MongoDB ID)
-        const dq = query(collection(db, 'portal_deals'), where('creatorId', '==', creatorData.id));
+        // 2. Fetch assigned deals (Check both creatorId and CreatorId due to migration)
+        const dq = query(
+          collection(db, 'portal_deals'), 
+          or(
+            where('creatorId', '==', creatorData.id),
+            where('CreatorId', '==', creatorData.id)
+          )
+        );
         const dSnap = await getDocs(dq);
-        const fetchedDeals = dSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const fetchedDeals = dSnap.docs.map(doc => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            ...d,
+            title: d.Title || d.title || 'Untitled Deal',
+            status: d.Status || d.status || 'locked',
+            amount: d.Amount || d.amount || 0,
+            createdAt: d.createdAt || (d.Date ? { toDate: () => new Date(d.Date) } : null)
+          };
+        });
         // Manual sort in JS
         fetchedDeals.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
         setDeals(fetchedDeals);
 
-        // 3. Fetch invoices from Firestore
-        const iq = query(collection(db, 'portal_invoices'), where('creatorId', '==', creatorData.id));
+        // 3. Fetch invoices (Check both creatorId and CreatorId)
+        const iq = query(
+          collection(db, 'portal_invoices'), 
+          or(
+            where('creatorId', '==', creatorData.id),
+            where('CreatorId', '==', creatorData.id)
+          )
+        );
         const iSnap = await getDocs(iq);
-        const fetchedInvoices = iSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const fetchedInvoices = iSnap.docs.map(doc => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            ...d,
+            status: d.Status || d.status || 'unpaid',
+            amount: d.Amount || d.amount || 0,
+            createdAt: d.createdAt || (d.Date ? { toDate: () => new Date(d.Date) } : null)
+          };
+        });
         fetchedInvoices.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
         setInvoices(fetchedInvoices);
 

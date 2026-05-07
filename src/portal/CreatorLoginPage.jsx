@@ -4,7 +4,7 @@ import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { 
   doc, getDoc, setDoc, serverTimestamp, 
-  collection, query, where, getDocs, updateDoc 
+  collection, query, where, getDocs, updateDoc, or 
 } from 'firebase/firestore';
 import { Helmet } from 'react-helmet-async';
 
@@ -23,8 +23,14 @@ export default function CreatorLoginPage() {
     try {
       const cred = await signInWithEmailAndPassword(auth, form.email, form.password);
       
-      // 1. Find creator by email (most reliable during migration)
-      const q = query(collection(db, 'portal_creators'), where('email', '==', cred.user.email));
+      // 1. Find creator by email (Check both email and Email due to migration)
+      const q = query(
+        collection(db, 'portal_creators'), 
+        or(
+          where('email', '==', cred.user.email),
+          where('Email', '==', cred.user.email)
+        )
+      );
       const qSnap = await getDocs(q);
       
       if (!qSnap.empty) {
