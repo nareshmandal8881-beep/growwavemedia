@@ -40,12 +40,33 @@ export default function CreatorDashboard() {
       if (!user) { navigate('/portal/login'); return; }
       setLoading(true);
       try {
-        // 1. Fetch creator profile from Firestore
-        const creatorRef = doc(db, 'portal_creators', user.uid);
+        // 1. Find creator by email or uid
+        const q = query(collection(db, 'portal_creators'), where('email', '==', user.email));
+        const qSnap = await getDocs(q);
+        
+        let creatorRef;
+        if (!qSnap.empty) {
+          const creatorDoc = qSnap.docs[0];
+          creatorRef = doc(db, 'portal_creators', creatorDoc.id);
+          // Link UID if missing
+          if (creatorDoc.data().uid !== user.uid) {
+            await updateDoc(creatorRef, {
+              uid: user.uid,
+              updatedAt: serverTimestamp()
+            });
+          }
+        } else {
+          // Create new doc if truly missing
+          creatorRef = doc(db, 'portal_creators', user.uid);
+          await setDoc(creatorRef, {
+            uid: user.uid,
+            name: user.displayName || user.email.split('@')[0],
+            email: user.email,
+            createdAt: serverTimestamp()
+          });
+        }
+
         const creatorSnap = await getDoc(creatorRef);
-        
-        if (!creatorSnap.exists()) { await signOut(auth); navigate('/portal/login'); return; }
-        
         const creatorData = { id: creatorSnap.id, ...creatorSnap.data() };
         setCreator(creatorData);
         setProfileForm({
@@ -61,16 +82,19 @@ export default function CreatorDashboard() {
           upiId: creatorData.upiId || ''
         });
 
-        // 2. Fetch assigned deals from Firestore
-        const dq = query(collection(db, 'portal_deals'), where('creatorId', '==', user.uid), orderBy('createdAt', 'desc'));
+        // 2. Fetch assigned deals from Firestore (using document ID which might be the old MongoDB ID)
+        const dq = query(collection(db, 'portal_deals'), where('creatorId', '==', creatorData.id));
         const dSnap = await getDocs(dq);
         const fetchedDeals = dSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Manual sort in JS
+        fetchedDeals.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
         setDeals(fetchedDeals);
 
         // 3. Fetch invoices from Firestore
-        const iq = query(collection(db, 'portal_invoices'), where('creatorId', '==', user.uid), orderBy('createdAt', 'desc'));
+        const iq = query(collection(db, 'portal_invoices'), where('creatorId', '==', creatorData.id));
         const iSnap = await getDocs(iq);
         const fetchedInvoices = iSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        fetchedInvoices.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
         setInvoices(fetchedInvoices);
 
       } catch (err) {

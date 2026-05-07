@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { 
+  doc, getDoc, setDoc, serverTimestamp, 
+  collection, query, where, getDocs, updateDoc 
+} from 'firebase/firestore';
 import { Helmet } from 'react-helmet-async';
 
 export default function CreatorLoginPage() {
@@ -20,13 +23,22 @@ export default function CreatorLoginPage() {
     try {
       const cred = await signInWithEmailAndPassword(auth, form.email, form.password);
       
-      // Verify creator exists in Firestore
-      const creatorRef = doc(db, 'portal_creators', cred.user.uid);
-      const creatorSnap = await getDoc(creatorRef);
+      // 1. Find creator by email (most reliable during migration)
+      const q = query(collection(db, 'portal_creators'), where('email', '==', cred.user.email));
+      const qSnap = await getDocs(q);
       
-      if (!creatorSnap.exists()) {
+      if (!qSnap.empty) {
+        const creatorDoc = qSnap.docs[0];
+        // Link UID if missing or different
+        if (creatorDoc.data().uid !== cred.user.uid) {
+          await updateDoc(doc(db, 'portal_creators', creatorDoc.id), {
+            uid: cred.user.uid,
+            updatedAt: serverTimestamp()
+          });
+        }
+      } else {
         // Auto-heal: If user exists in Auth but Firestore doc is missing
-        await setDoc(creatorRef, {
+        await setDoc(doc(db, 'portal_creators', cred.user.uid), {
           uid: cred.user.uid,
           name: cred.user.displayName || cred.user.email.split('@')[0],
           email: cred.user.email,
