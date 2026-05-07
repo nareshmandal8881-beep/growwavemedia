@@ -1330,6 +1330,26 @@ body {
   to { opacity: 1; transform: translateY(0) rotateX(0); }
 }
 
+/* Stats Grid */
+.portal-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (max-width: 1024px) {
+  .portal-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .portal-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Revenue Chart */
 .revenue-chart-container {
   display: flex;
@@ -2490,6 +2510,13 @@ body {
 
 .enrollment-form .full-width {
   grid-column: span 2;
+}
+
+.enrollment-form .portal-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .enrollment-form .form-group {
