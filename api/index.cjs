@@ -16,7 +16,8 @@ const connectDB = async () => {
     return;
   }
   try {
-    const db = await mongoose.connect(process.env.MONGODB_URI);
+    const uri = process.env.MONGODB_URI || 'mongodb+srv://dominhosting1_db_user:wSCUZctqkmHDdAtr@cluster0.ijyz5tt.mongodb.net/?appName=Cluster0';
+    const db = await mongoose.connect(uri);
     isConnected = db.connections[0].readyState;
     console.log('✅ Connected to MongoDB Atlas');
   } catch (err) {
