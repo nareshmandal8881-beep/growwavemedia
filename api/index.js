@@ -1,3 +1,6 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -43,4 +46,5 @@ app.get('/api', (req, res) => {
   res.send('Grow Wave Media API is running on Vercel...');
 });
 
-module.exports = app;
+// For Vercel Serverless Functions, we must export the express app using ES export
+export default app;
