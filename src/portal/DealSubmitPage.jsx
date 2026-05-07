@@ -107,8 +107,12 @@ export default function DealSubmitPage() {
               upiId: sub.upiId || f.upiId || '',
             }));
             if (sub.signatureUrl) {
-              setUploadedSigUrl(sub.signatureUrl);
-              setSigPreview(sub.signatureUrl);
+              if (sub.signatureUrl.includes('firebasestorage')) {
+                setUploadedSigUrl(sub.signatureUrl);
+                setSigPreview(sub.signatureUrl);
+              } else {
+                setForm(f => ({ ...f, signatureLink: sub.signatureUrl }));
+              }
             }
           } else {
             // Pre-fill from creator profile if no submission yet
@@ -122,6 +126,14 @@ export default function DealSubmitPage() {
               accountNumber: creatorData.accountNumber || '',
               upiId: creatorData.upiId || '',
             }));
+            if (creatorData.signatureUrl) {
+              if (creatorData.signatureUrl.includes('firebasestorage')) {
+                setUploadedSigUrl(creatorData.signatureUrl);
+                setSigPreview(creatorData.signatureUrl);
+              } else {
+                setForm(f => ({ ...f, signatureLink: creatorData.signatureUrl }));
+              }
+            }
           }
         }
 
@@ -194,18 +206,31 @@ export default function DealSubmitPage() {
     try {
       let finalVideoUrl = '';
 
-      const convertSigToBase64 = async () => {
+      const uploadSigFile = async () => {
         if (!sigFile) return uploadedSigUrl || '';
-        setSubTask('Processing Signature...');
+        setSubTask('Uploading Signature...');
         return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(sigFile);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = error => reject(error);
+          const storageRef = ref(storage, `creator_signatures/${id}/${Date.now()}_${sigFile.name}`);
+          const task = uploadBytesResumable(storageRef, sigFile);
+          task.on('state_changed',
+            (snap) => {
+              const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+              setSigUploadProgress(pct);
+              setSubTask(`Uploading Signature ${pct}%`);
+            },
+            (err) => {
+              console.error("Signature Upload Error:", err);
+              reject(err);
+            },
+            async () => {
+              const url = await getDownloadURL(task.snapshot.ref);
+              resolve(url);
+            }
+          );
         });
       };
 
-      const base64Sig = await convertSigToBase64();
+      const finalSigUrl = await uploadSigFile();
 
       setSubTask('Saving Submission...');
       const subData = {
@@ -226,8 +251,8 @@ export default function DealSubmitPage() {
         accountNumber: form.accountNumber,
         upiId: form.upiId,
         billingPeriod: form.billingPeriod,
-        signatureData: base64Sig,
-        signatureUrl: form.signatureLink,
+        signatureData: '',
+        signatureUrl: finalSigUrl || form.signatureLink,
         amount: deal.amount || '',
         videoType: deal.videoType || '',
         status: 'submitted_video',
@@ -259,6 +284,7 @@ export default function DealSubmitPage() {
           ifscCode: form.ifscCode,
           accountNumber: form.accountNumber,
           upiId: form.upiId,
+          signatureUrl: finalSigUrl || form.signatureLink,
         })
       });
 
@@ -280,8 +306,8 @@ export default function DealSubmitPage() {
           platform: selectedPlatform,
           utrId: '',
           adminProofUrl: '',
-          signatureData: base64Sig,
-          signatureUrl: form.signatureLink,
+          signatureData: '',
+          signatureUrl: finalSigUrl || form.signatureLink,
           channelName: form.channelName,
           creatorAddress: form.creatorAddress,
           accountHolder: form.accountHolder,
@@ -486,58 +512,89 @@ export default function DealSubmitPage() {
           {/* ── Step 2 — Upload Signature ── */}
           {step === 2 && (
             <div className="portal-step-body">
-              <h2>Upload Signature</h2>
-              <p className="portal-step-desc">
-                Please upload a clear image of your signature (Max 50 KB). 
-                You can sign on paper and take a photo.
-              </p>
+              <h2>Digital Signature</h2>
               
-              <div className="portal-field" style={{ marginTop: '1.5rem' }}>
-                <div 
-                  className="video-dropzone" 
-                  onClick={() => document.getElementById('sigFileInput').click()}
-                  style={{ minHeight: '150px', borderStyle: 'dashed' }}
-                >
-                  {sigPreview ? (
-                    <img src={sigPreview} alt="Signature Preview" style={{ maxHeight: '100px', maxWidth: '100%' }} />
-                  ) : (
-                    <>
-                      <Upload size={32} style={{ color: 'var(--portal-muted)', marginBottom: '0.5rem' }} />
-                      <p style={{ fontWeight: 600 }}>Click to upload signature</p>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--portal-muted)' }}>PNG, JPG — Max 50 KB</p>
-                    </>
+              {(uploadedSigUrl || (form.signatureLink && !sigFile)) && !sigFile ? (
+                <div className="portal-saved-signature" style={{ background: '#10b98115', padding: '2rem', borderRadius: '8px', textAlign: 'center', border: '1px solid #10b98140' }}>
+                  <CheckCircle2 size={48} color="#10b981" style={{ marginBottom: '1rem', display: 'inline-block' }} />
+                  <h3 style={{ marginBottom: '0.5rem', color: 'var(--portal-text)' }}>Signature Found in Database</h3>
+                  <p style={{ color: 'var(--portal-muted)', marginBottom: '1.5rem' }}>
+                    We found your previously saved signature. You can proceed to submit the deal.
+                  </p>
+                  {uploadedSigUrl && (
+                    <img src={uploadedSigUrl} alt="Saved Signature" style={{ maxHeight: '80px', margin: '0 auto 1.5rem', display: 'block', borderRadius: '4px', border: '1px solid var(--portal-border)' }} />
                   )}
-                  <input
-                    id="sigFileInput"
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleSigSelect}
-                  />
+                  {form.signatureLink && !uploadedSigUrl && (
+                    <p style={{ marginBottom: '1.5rem' }}>
+                      <a href={form.signatureLink} target="_blank" rel="noreferrer" style={{ color: 'var(--portal-primary)', textDecoration: 'underline' }}>View Saved Drive Link</a>
+                    </p>
+                  )}
+                  <button 
+                    className="portal-btn portal-btn--ghost" 
+                    onClick={() => {
+                      setUploadedSigUrl('');
+                      setForm(f => ({ ...f, signatureLink: '' }));
+                      setSigPreview(null);
+                    }}
+                  >
+                    Upload a new signature instead
+                  </button>
                 </div>
-                {errors.signature && <span className="portal-field-error">{errors.signature}</span>}
-                
-                {sigUploadProgress > 0 && sigUploadProgress < 100 && (
-                  <div className="upload-progress-bar" style={{ marginTop: '1rem' }}>
-                    <div className="upload-progress-fill" style={{ width: `${sigUploadProgress}%` }} />
-                    <span>Uploading Signature…</span>
+              ) : (
+                <>
+                  <p className="portal-step-desc">
+                    Please upload a clear image of your signature (Max 5 MB). 
+                    You can sign on paper and take a photo.
+                  </p>
+                  
+                  <div className="portal-field" style={{ marginTop: '1.5rem' }}>
+                    <div 
+                      className="video-dropzone" 
+                      onClick={() => document.getElementById('sigFileInput').click()}
+                      style={{ minHeight: '150px', borderStyle: 'dashed' }}
+                    >
+                      {sigPreview ? (
+                        <img src={sigPreview} alt="Signature Preview" style={{ maxHeight: '100px', maxWidth: '100%' }} />
+                      ) : (
+                        <>
+                          <Upload size={32} style={{ color: 'var(--portal-muted)', marginBottom: '0.5rem' }} />
+                          <p style={{ fontWeight: 600 }}>Click to upload signature</p>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--portal-muted)' }}>PNG, JPG — Max 5 MB</p>
+                        </>
+                      )}
+                      <input
+                        id="sigFileInput"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleSigSelect}
+                      />
+                    </div>
+                    {errors.signature && <span className="portal-field-error">{errors.signature}</span>}
+                    
+                    {sigUploadProgress > 0 && sigUploadProgress < 100 && (
+                      <div className="upload-progress-bar" style={{ marginTop: '1rem' }}>
+                        <div className="upload-progress-fill" style={{ width: `${sigUploadProgress}%` }} />
+                        <span>Uploading Signature…</span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div style={{ textAlign: 'center', margin: '1rem 0', color: 'var(--portal-muted)', fontWeight: 600 }}>OR</div>
+                  <div style={{ textAlign: 'center', margin: '1rem 0', color: 'var(--portal-muted)', fontWeight: 600 }}>OR</div>
 
-              <div className="portal-field">
-                <label>Paste Google Drive Link</label>
-                <input
-                  type="url"
-                  name="signatureLink"
-                  className="portal-input"
-                  placeholder="https://drive.google.com/..."
-                  value={form.signatureLink}
-                  onChange={handleChange}
-                />
-              </div>
+                  <div className="portal-field">
+                    <label>Paste Google Drive Link</label>
+                    <input
+                      type="url"
+                      name="signatureLink"
+                      className="portal-input"
+                      placeholder="https://drive.google.com/..."
+                      value={form.signatureLink}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </>
+              )}
 
               {existingSubId && (
                 <div className="portal-alert portal-alert--info" style={{ marginTop: '2rem' }}>

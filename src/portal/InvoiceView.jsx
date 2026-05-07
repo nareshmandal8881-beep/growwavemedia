@@ -210,7 +210,17 @@ export default function InvoiceView() {
             <div className="inv-sig-section">
               <div className="inv-sig-display">
                 {(invoice.signatureUrl || invoice.signatureData) && (
-                  <img src={invoice.signatureUrl || invoice.signatureData} alt="Authorized Signature" className="inv-sig-img" />
+                  invoice.signatureData ? (
+                    <img src={invoice.signatureData} alt="Authorized Signature" className="inv-sig-img" />
+                  ) : invoice.signatureUrl?.includes('firebasestorage') ? (
+                    <img src={invoice.signatureUrl} alt="Authorized Signature" className="inv-sig-img" />
+                  ) : (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <a href={invoice.signatureUrl} target="_blank" rel="noreferrer" style={{color: '#3b82f6', textDecoration: 'underline', fontSize: '0.9rem', wordBreak: 'break-all'}}>
+                        🔗 Attached Google Drive Signature
+                      </a>
+                    </div>
+                  )
                 )}
                 <div className="inv-sig-line">
                   <div className="inv-sig-name">Authorized Signature</div>

@@ -12,6 +12,7 @@ const CreatorSchema = new mongoose.Schema({
   ifscCode: String,
   accountNumber: String,
   upiId: String,
+  signatureUrl: String,
   status: { type: String, default: 'active' },
   createdAt: { type: Date, default: Date.now }
 });
