@@ -1,12 +1,9 @@
 {
-  "version": 2,
-  "functions": {
-    "api/server.cjs": {
-      "runtime": "@vercel/node@3.0.7"
-    }
-  },
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/server.cjs" },
+    { "source": "/api/:path*", "destination": "/api/server" },
     { "source": "/:path*", "destination": "/index.html" }
-  ]
+  ],
+  "env": {
+    "MONGODB_URI": "mongodb+srv://dominhosting1_db_user:wSCUZctqkmHDdAtr@cluster0.ijyz5tt.mongodb.net/?appName=Cluster0"
+  }
 }
