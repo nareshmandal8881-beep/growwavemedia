@@ -23,7 +23,7 @@ export default function InvoiceView() {
       if (!user) { navigate('/portal/login'); return; }
       setLoading(true);
       try {
-        const invoiceRef = doc(db, 'invoices', id);
+        const invoiceRef = doc(db, 'portal_invoices', id);
         const invoiceSnap = await getDoc(invoiceRef);
         if (!invoiceSnap.exists()) { navigate('/portal/dashboard'); return; }
         setInvoice({ id: invoiceSnap.id, ...invoiceSnap.data() });

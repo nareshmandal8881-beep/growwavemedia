@@ -33,18 +33,23 @@ function LeadsPanel({ activeTab }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch all leads without strict ordering first to ensure visibility
       const q = query(collection(db, 'leads'));
       const querySnapshot = await getDocs(q);
       const leads = querySnapshot.docs.map(doc => {
         const d = doc.data();
+        // Support both lowercase (new) and capitalized (imported) fields
         return {
           id: doc.id,
-          ...d,
-          createdAt: d.createdAt?.toDate() || new Date()
+          name: d.Name || d.name || '—',
+          email: d.Email || d.email || '—',
+          phone: d.Phone || d.phone || '—',
+          type: d.Type || d.type || 'contact_form',
+          message: d.Message || d.message || '',
+          company: d.Company || d.company || '',
+          location: d.Location || d.location || '',
+          createdAt: d.createdAt?.toDate() || (d.Date ? new Date(d.Date) : new Date())
         };
       });
-      // Sort manually in JS to handle missing timestamps
       leads.sort((a, b) => b.createdAt - a.createdAt);
       setData(leads);
     } catch (err) { console.error(err); }
@@ -217,7 +222,7 @@ function CreatorsPanel() {
   const handleUpdateCreator = async () => {
     setUpdating(true);
     try {
-      const creatorRef = doc(db, 'creators', selectedCreator.id);
+      const creatorRef = doc(db, 'portal_creators', selectedCreator.id);
       await updateDoc(creatorRef, {
         ...selectedCreator,
         updatedAt: serverTimestamp()
@@ -235,7 +240,7 @@ function CreatorsPanel() {
   const fetchCreators = async () => {
     setLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, 'creators'));
+      const querySnapshot = await getDocs(collection(db, 'portal_creators'));
       const data = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -256,7 +261,7 @@ function CreatorsPanel() {
       await updateProfile(cred.user, { displayName: form.name });
       
       // 2. Create in Firestore
-      await setDoc(doc(db, 'creators', cred.user.uid), {
+      await setDoc(doc(db, 'portal_creators', cred.user.uid), {
         uid: cred.user.uid,
         name: form.name,
         email: form.email,
@@ -407,8 +412,8 @@ function DealsPanel() {
     setLoading(true);
     try {
       const [dSnap, cSnap] = await Promise.all([
-        getDocs(collection(db, 'deals')),
-        getDocs(collection(db, 'creators'))
+        getDocs(collection(db, 'portal_deals')),
+        getDocs(collection(db, 'portal_creators'))
       ]);
       const dData = dSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const cData = cSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -425,7 +430,7 @@ function DealsPanel() {
     setSaving(true);
     try {
       const creator = creators.find(c => c.id === form.creatorId);
-      await addDoc(collection(db, 'deals'), {
+      await addDoc(collection(db, 'portal_deals'), {
         ...form,
         creatorName: creator?.name || '',
         channelName: creator?.channelName || '',
@@ -443,13 +448,13 @@ function DealsPanel() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this deal?')) return;
-    await deleteDoc(doc(db, 'deals', id));
+    await deleteDoc(doc(db, 'portal_deals', id));
     fetchAll();
   };
 
   const handleApproveDeal = async (id) => {
     if (!window.confirm('Approve this deal and notify the creator?')) return;
-    await updateDoc(doc(db, 'deals', id), {
+    await updateDoc(doc(db, 'portal_deals', id), {
       status: 'approved',
       updatedAt: serverTimestamp()
     });
@@ -552,7 +557,7 @@ function SubmissionsPanel() {
   const fetchSubs = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'submissions'));
+      const q = query(collection(db, 'portal_submissions'));
       const querySnapshot = await getDocs(q);
       const data = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -583,7 +588,7 @@ function SubmissionsPanel() {
       }
 
       // 1. Update submission in Firestore
-      await updateDoc(doc(db, 'submissions', sub.id), {
+      await updateDoc(doc(db, 'portal_submissions', sub.id), {
         status: 'paid',
         adminUtrId: pForm.utrId,
         adminProofUrl: proofUrl,
@@ -592,7 +597,7 @@ function SubmissionsPanel() {
 
       // 2. Find and update invoice in Firestore
       const q = query(
-        collection(db, 'invoices'), 
+        collection(db, 'portal_invoices'), 
         where('creatorId', '==', sub.creatorId),
         where('dealId', '==', sub.dealId),
         where('status', '==', 'pending_payment')
@@ -600,7 +605,7 @@ function SubmissionsPanel() {
       const invSnap = await getDocs(q);
       if (!invSnap.empty) {
         const invDoc = invSnap.docs[0];
-        await updateDoc(doc(db, 'invoices', invDoc.id), {
+        await updateDoc(doc(db, 'portal_invoices', invDoc.id), {
           status: 'paid',
           utrId: pForm.utrId,
           adminProofUrl: proofUrl || '',
@@ -620,12 +625,12 @@ function SubmissionsPanel() {
   const handleReject = async (sub) => {
     const note = rejectNote || 'Rejected by admin.';
     try {
-      await updateDoc(doc(db, 'submissions', sub.id), {
+      await updateDoc(doc(db, 'portal_submissions', sub.id), {
         status: 'rejected',
         rejectReason: note,
         updatedAt: serverTimestamp()
       });
-      await updateDoc(doc(db, 'deals', sub.dealId), {
+      await updateDoc(doc(db, 'portal_deals', sub.dealId), {
         status: 'rejected',
         updatedAt: serverTimestamp()
       });
@@ -777,7 +782,7 @@ function InvoicesPanel() {
     (async () => {
       setLoading(true);
       try {
-        const querySnapshot = await getDocs(collection(db, 'invoices'));
+        const querySnapshot = await getDocs(collection(db, 'portal_invoices'));
         const data = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
@@ -841,10 +846,10 @@ export default function DashboardPage() {
     { id: 'influencers',  label: 'Influencers',   icon: <Users size={20}/> },
     { id: 'brands',       label: 'Brands',         icon: <Briefcase size={20}/> },
     { id: 'enquiries',    label: 'Enquiries',      icon: <MessageSquare size={20}/> },
-    { id: 'creators',     label: 'Creators',       icon: <Users size={20}/> },
-    { id: 'deals',        label: 'Deals',          icon: <FileText size={20}/> },
-    { id: 'submissions',  label: 'Submissions',    icon: <CheckCircle size={20}/> },
-    { id: 'invoices',     label: 'Invoices',       icon: <FileText size={20}/> },
+    { id: 'portal_creators',     label: 'Creators',       icon: <Users size={20}/> },
+    { id: 'portal_deals',        label: 'Deals',          icon: <FileText size={20}/> },
+    { id: 'portal_submissions',  label: 'Submissions',    icon: <CheckCircle size={20}/> },
+    { id: 'portal_invoices',     label: 'Invoices',       icon: <FileText size={20}/> },
   ];
 
   const isLeadsTab = ['influencers','brands','enquiries'].includes(activeTab);
@@ -876,10 +881,10 @@ export default function DashboardPage() {
         </header>
         <div className="dash-content">
           {isLeadsTab      && <LeadsPanel activeTab={activeTab}/>}
-          {activeTab === 'creators'    && <CreatorsPanel/>}
-          {activeTab === 'deals'       && <DealsPanel/>}
-          {activeTab === 'submissions' && <SubmissionsPanel/>}
-          {activeTab === 'invoices'    && <InvoicesPanel/>}
+          {activeTab === 'portal_creators'    && <CreatorsPanel/>}
+          {activeTab === 'portal_deals'       && <DealsPanel/>}
+          {activeTab === 'portal_submissions' && <SubmissionsPanel/>}
+          {activeTab === 'portal_invoices'    && <InvoicesPanel/>}
         </div>
       </main>
     </div>

@@ -157,12 +157,13 @@ export default function App() {
     try {
       // 1. SAVE TO FIREBASE FIRESTORE
       await addDoc(collection(db, 'leads'), {
-        type: 'contact_form',
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        message: formData.message,
-        website: formData.service || 'General',
+        Type: 'contact_form',
+        Name: formData.name,
+        Email: formData.email,
+        Phone: formData.phone,
+        Message: formData.message,
+        Service: formData.service || 'General',
+        Date: new Date().toLocaleString('en-IN'),
         createdAt: serverTimestamp()
       });
 

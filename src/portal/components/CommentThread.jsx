@@ -18,7 +18,7 @@ export default function CommentThread({ submissionId, isAdmin }) {
     if (!submissionId) return;
     
     const q = query(
-      collection(db, 'comments'),
+      collection(db, 'portal_comments'),
       where('submissionId', '==', submissionId),
       orderBy('createdAt', 'asc')
     );

@@ -25,7 +25,7 @@ export default function CreatorSignupPage() {
       await updateProfile(cred.user, { displayName: form.name });
 
       // 3. Create document in Firestore
-      await setDoc(doc(db, 'creators', cred.user.uid), {
+      await setDoc(doc(db, 'portal_creators', cred.user.uid), {
         uid: cred.user.uid,
         name: form.name,
         email: form.email,

@@ -74,7 +74,7 @@ export default function DealSubmitPage() {
       setLoading(true);
       try {
         // 1. Fetch creator profile from Firestore
-        const creatorRef = doc(db, 'creators', user.uid);
+        const creatorRef = doc(db, 'portal_creators', user.uid);
         const creatorSnap = await getDoc(creatorRef);
         
         if (!creatorSnap.exists()) { 
@@ -86,14 +86,14 @@ export default function DealSubmitPage() {
         setCreator(creatorData);
 
         // 2. Fetch deal details from Firestore
-        const dealRef = doc(db, 'deals', id);
+        const dealRef = doc(db, 'portal_deals', id);
         const dealSnap = await getDoc(dealRef);
         
         if (!dealSnap.exists()) { navigate('/portal/dashboard'); return; }
         const dealData = { id: dealSnap.id, ...dealSnap.data() };
         setDeal(dealData);
         // 3. Check for existing submission in Firestore
-        const sq = query(collection(db, 'submissions'), where('dealId', '==', id));
+        const sq = query(collection(db, 'portal_submissions'), where('dealId', '==', id));
         const sSnap = await getDocs(sq);
         
         if (!sSnap.empty) {
@@ -241,22 +241,22 @@ export default function DealSubmitPage() {
       };
 
       if (existingSubId) {
-        await updateDoc(doc(db, 'submissions', existingSubId), {
+        await updateDoc(doc(db, 'portal_submissions', existingSubId), {
           ...subData,
           updatedAt: serverTimestamp()
         });
       } else {
-        await addDoc(collection(db, 'submissions'), subData);
+        await addDoc(collection(db, 'portal_submissions'), subData);
       }
 
       setSubTask('Updating Deal...');
-      await updateDoc(doc(db, 'deals', id), { 
+      await updateDoc(doc(db, 'portal_deals', id), { 
         status: 'submitted_video',
         updatedAt: serverTimestamp()
       });
 
       setSubTask('Syncing Profile...');
-      await updateDoc(doc(db, 'creators', creator.id), {
+      await updateDoc(doc(db, 'portal_creators', creator.id), {
         channelName: form.channelName,
         creatorAddress: form.creatorAddress,
         accountHolder: form.accountHolder,
@@ -269,7 +269,7 @@ export default function DealSubmitPage() {
       });
 
       setSubTask('Generating Invoice...');
-      await addDoc(collection(db, 'invoices'), {
+      await addDoc(collection(db, 'portal_invoices'), {
         invoiceId: generateInvoiceId(),
         dealId: id,
         creatorId: creator.id,

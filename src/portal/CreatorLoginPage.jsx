@@ -21,7 +21,7 @@ export default function CreatorLoginPage() {
       const cred = await signInWithEmailAndPassword(auth, form.email, form.password);
       
       // Verify creator exists in Firestore
-      const creatorRef = doc(db, 'creators', cred.user.uid);
+      const creatorRef = doc(db, 'portal_creators', cred.user.uid);
       const creatorSnap = await getDoc(creatorRef);
       
       if (!creatorSnap.exists()) {

@@ -17,7 +17,7 @@ export default function CreatorDashboard() {
   const [creator, setCreator] = useState(null);
   const [deals, setDeals] = useState([]);
   const [invoices, setInvoices] = useState([]);
-  const [tab, setTab] = useState('deals');
+  const [tab, setTab] = useState('portal_deals');
   const [loading, setLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({ 
@@ -41,7 +41,7 @@ export default function CreatorDashboard() {
       setLoading(true);
       try {
         // 1. Fetch creator profile from Firestore
-        const creatorRef = doc(db, 'creators', user.uid);
+        const creatorRef = doc(db, 'portal_creators', user.uid);
         const creatorSnap = await getDoc(creatorRef);
         
         if (!creatorSnap.exists()) { await signOut(auth); navigate('/portal/login'); return; }
@@ -62,13 +62,13 @@ export default function CreatorDashboard() {
         });
 
         // 2. Fetch assigned deals from Firestore
-        const dq = query(collection(db, 'deals'), where('creatorId', '==', user.uid), orderBy('createdAt', 'desc'));
+        const dq = query(collection(db, 'portal_deals'), where('creatorId', '==', user.uid), orderBy('createdAt', 'desc'));
         const dSnap = await getDocs(dq);
         const fetchedDeals = dSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setDeals(fetchedDeals);
 
         // 3. Fetch invoices from Firestore
-        const iq = query(collection(db, 'invoices'), where('creatorId', '==', user.uid), orderBy('createdAt', 'desc'));
+        const iq = query(collection(db, 'portal_invoices'), where('creatorId', '==', user.uid), orderBy('createdAt', 'desc'));
         const iSnap = await getDocs(iq);
         const fetchedInvoices = iSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setInvoices(fetchedInvoices);
@@ -92,7 +92,7 @@ export default function CreatorDashboard() {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      const creatorRef = doc(db, 'creators', creator.id);
+      const creatorRef = doc(db, 'portal_creators', creator.id);
       await updateDoc(creatorRef, {
         ...profileForm,
         updatedAt: serverTimestamp()
@@ -138,14 +138,14 @@ export default function CreatorDashboard() {
           )}
           <nav className="portal-sidebar__nav">
             <button
-              className={`portal-nav-btn ${tab === 'deals' ? 'active' : ''}`}
-              onClick={() => setTab('deals')}
+              className={`portal-nav-btn ${tab === 'portal_deals' ? 'active' : ''}`}
+              onClick={() => setTab('portal_deals')}
             >
               <LayoutDashboard size={18} /><span>My Deals</span>
             </button>
             <button
-              className={`portal-nav-btn ${tab === 'invoices' ? 'active' : ''}`}
-              onClick={() => setTab('invoices')}
+              className={`portal-nav-btn ${tab === 'portal_invoices' ? 'active' : ''}`}
+              onClick={() => setTab('portal_invoices')}
             >
               <FileText size={18} /><span>Invoices</span>
             </button>
@@ -200,7 +200,7 @@ export default function CreatorDashboard() {
               </div>
 
               {/* Deals Tab */}
-              {tab === 'deals' && (
+              {tab === 'portal_deals' && (
                 <section className="portal-section">
                   <h2 className="portal-section__title">Assigned Deals</h2>
                   {deals.length === 0 ? (
@@ -264,7 +264,7 @@ export default function CreatorDashboard() {
               )}
 
               {/* Invoices Tab */}
-              {tab === 'invoices' && (
+              {tab === 'portal_invoices' && (
                 <section className="portal-section">
                   <h2 className="portal-section__title">My Invoices</h2>
                   {invoices.length === 0 ? (
