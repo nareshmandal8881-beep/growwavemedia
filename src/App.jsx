@@ -35,8 +35,8 @@ import brandImages from './assets/logo/images.png';
 import brandJar from './assets/logo/jar-app-logo-png_seeklogo-543025.png';
 import brandPocket from './assets/logo/pocketoption.svg';
 
-import { db } from './firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
+
 
 const tickerItems = [
   'Social Media Marketing',

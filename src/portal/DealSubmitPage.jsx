@@ -92,18 +92,38 @@ export default function DealSubmitPage() {
         if (!dealSnap.exists()) { navigate('/portal/dashboard'); return; }
         const dealData = { id: dealSnap.id, ...dealSnap.data() };
         setDeal(dealData);
-
-              }
-            }
-          }
-        }
-
-        // Set platform from deal if available
-        if (dealData.platform) {
-          const p = dealData.platform.toLowerCase();
-          if (['youtube', 'instagram', 'facebook', 'twitter'].includes(p)) {
-            setSelectedPlatform(p);
-          }
+        // 3. Check for existing submission in Firestore
+        const sq = query(collection(db, 'submissions'), where('dealId', '==', id));
+        const sSnap = await getDocs(sq);
+        
+        if (!sSnap.empty) {
+          const sub = { id: sSnap.docs[0].id, ...sSnap.docs[0].data() };
+          setExistingSubId(sub.id);
+          setForm((f) => ({
+            ...f,
+            videoLink: sub.videoLink || '',
+            timestamp: sub.timestamp || '',
+            channelName: sub.channelName || creatorData.channelName || '',
+            creatorAddress: sub.creatorAddress || creatorData.creatorAddress || '',
+            accountHolder: sub.accountHolder || creatorData.accountHolder || '',
+            bankName: sub.bankName || creatorData.bankName || '',
+            ifscCode: sub.ifscCode || creatorData.ifscCode || '',
+            accountNumber: sub.accountNumber || creatorData.accountNumber || '',
+            upiId: sub.upiId || creatorData.upiId || '',
+            signatureLink: sub.signatureUrl || '',
+          }));
+        } else {
+          // Prefill from creator profile
+          setForm((f) => ({
+            ...f,
+            channelName: creatorData.channelName || '',
+            creatorAddress: creatorData.creatorAddress || '',
+            accountHolder: creatorData.accountHolder || '',
+            bankName: creatorData.bankName || '',
+            ifscCode: creatorData.ifscCode || '',
+            accountNumber: creatorData.accountNumber || '',
+            upiId: creatorData.upiId || '',
+          }));
         }
       } catch (err) {
         console.error(err);
