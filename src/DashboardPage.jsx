@@ -879,11 +879,19 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('waveAdminToken');
-    if (token !== 'authenticated_success') navigate('/wavelogin');
+    // Require both Firebase Auth session AND localStorage token
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      const token = localStorage.getItem('waveAdminToken');
+      if (!user || token !== 'authenticated_success') {
+        localStorage.removeItem('waveAdminToken');
+        navigate('/wavelogin');
+      }
+    });
+    return () => unsubscribe();
   }, [navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await auth.signOut();
     localStorage.removeItem('waveAdminToken');
     navigate('/wavelogin');
   };
