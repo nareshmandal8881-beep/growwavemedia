@@ -489,6 +489,21 @@ export default function CreatorDashboard() {
                              </div>
                            ))}
                          </div>
+
+                        {/* Signature Preview in Profile */}
+                        {(creator.signatureData || creator.signatureUrl) && (
+                          <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <span className="portal-profile-item__label" style={{ display: 'block', marginBottom: '1rem' }}>Digital Signature on File</span>
+                            {creator.signatureData ? (
+                              <img src={creator.signatureData} alt="Saved Signature" style={{ maxHeight: '80px', background: '#fff', padding: '8px', borderRadius: '4px', display: 'block' }} />
+                            ) : (
+                              <a href={creator.signatureUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--portal-primary)', fontSize: '0.9rem' }}>🔗 View Signature Link</a>
+                            )}
+                            <p style={{ fontSize: '0.75rem', color: 'var(--portal-muted)', marginTop: '1rem' }}>
+                              This signature is automatically used for all your deal submissions. You can update it during any deal submission process.
+                            </p>
+                          </div>
+                        )}
                         <p className="portal-profile-note" style={{ marginTop: '2rem' }}>
                           Need to change your name or email? Contact admin at{' '}
                           <a href="mailto:growwavemedia@gmail.com">growwavemedia@gmail.com</a>

@@ -487,6 +487,16 @@ export default function DealSubmitPage() {
                   <input name="upiId" value={form.upiId} onChange={handleChange} placeholder="johndoe@upi" />
                 </div>
               </div>
+
+              {/* Signature status note */}
+              {(uploadedSigUrl || form.signatureLink) && (
+                <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(52, 211, 153, 0.1)', border: '1px solid rgba(52, 211, 153, 0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <CheckCircle2 size={20} color="#34d399" />
+                  <p style={{ fontSize: '0.85rem', color: '#34d399', margin: 0 }}>
+                    <strong>Signature Found:</strong> Your saved digital signature is ready. You can submit now or click Next to review/update it.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -593,7 +603,25 @@ export default function DealSubmitPage() {
               </button>
             )}
             <div style={{ flex: 1 }} />
-            {step < STEPS.length - 1 ? (
+            
+            {/* If we have a signature on file, allow direct submission from Step 1 */}
+            {step === 1 && (uploadedSigUrl || form.signatureLink) ? (
+              <button
+                className="portal-btn portal-btn--primary"
+                onClick={handleSubmit}
+                disabled={submitting}
+                style={{ minWidth: '160px' }}
+              >
+                {submitting ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span className="portal-btn-spinner" />
+                    <span>{subTask || 'Processing...'}</span>
+                  </div>
+                ) : (
+                  '🚀 Submit Deal (Use Saved Signature)'
+                )}
+              </button>
+            ) : step < STEPS.length - 1 ? (
               <button className="portal-btn portal-btn--primary" onClick={next}>
                 Next <ArrowRight size={16} />
               </button>
