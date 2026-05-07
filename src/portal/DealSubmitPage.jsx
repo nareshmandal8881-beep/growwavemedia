@@ -50,7 +50,7 @@ export default function DealSubmitPage() {
   const [uploadedSigUrl, setUploadedSigUrl] = useState('');
   const [subTask, setSubTask] = useState(''); 
 
-  const API_BASE = 'http://localhost:5000/api';
+  const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 
   const [form, setForm] = useState({
     videoLink: '',

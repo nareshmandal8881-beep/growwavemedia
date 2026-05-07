@@ -16,7 +16,7 @@ export default function InvoiceView() {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = 'http://localhost:5000/api';
+  const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {

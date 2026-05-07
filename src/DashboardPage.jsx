@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Eye, Receipt, Download
 } from 'lucide-react';
 import { db, auth, storage } from './firebase';
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import StatusBadge from './portal/components/StatusBadge';

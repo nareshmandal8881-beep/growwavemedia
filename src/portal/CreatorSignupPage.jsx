@@ -25,7 +25,7 @@ export default function CreatorSignupPage() {
       await updateProfile(cred.user, { displayName: form.name });
 
       // 3. Create document in MongoDB via API
-      const res = await fetch('http://localhost:5000/api/creators', {
+      const res = await fetch((import.meta.env.PROD ? '/api/creators' : 'http://localhost:5000/api/creators'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

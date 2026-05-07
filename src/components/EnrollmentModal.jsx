@@ -67,7 +67,7 @@ export default function EnrollmentModal({ isOpen, onClose }) {
 
     try {
       // 1. SAVE TO MONGODB VIA API
-      await fetch('http://localhost:5000/api/leads', {
+      await fetch((import.meta.env.PROD ? '/api/leads' : 'http://localhost:5000/api/leads'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

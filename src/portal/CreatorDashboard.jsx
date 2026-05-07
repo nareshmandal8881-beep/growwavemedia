@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 import { Helmet } from 'react-helmet-async';
 import StatusBadge from './components/StatusBadge';
 import {

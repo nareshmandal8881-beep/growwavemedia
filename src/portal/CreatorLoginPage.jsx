@@ -20,10 +20,10 @@ export default function CreatorLoginPage() {
     try {
       const cred = await signInWithEmailAndPassword(auth, form.email, form.password);
       // Verify creator exists in MongoDB
-      const res = await fetch(`http://localhost:5000/api/creators/uid/${cred.user.uid}`);
+      const res = await fetch(`${import.meta.env.PROD ? '/api' : 'http://localhost:5000/api'}/creators/uid/${cred.user.uid}`);
       if (!res.ok) {
         // Auto-heal: If user exists in Auth but MongoDB doc is missing
-        await fetch('http://localhost:5000/api/creators', {
+        await fetch((import.meta.env.PROD ? '/api/creators' : 'http://localhost:5000/api/creators'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -12,7 +12,7 @@ export default function CommentThread({ submissionId, isAdmin }) {
   const [user, setUser] = useState(null);
   const bottomRef = useRef(null);
 
-  const API_BASE = 'http://localhost:5000/api';
+  const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
