@@ -477,11 +477,14 @@ function DealsPanel() {
 
   const handleApproveDeal = async (id) => {
     if (!window.confirm('Approve this deal and notify the creator?')) return;
-    await updateDoc(doc(db, 'portal_deals', id), {
-      status: 'approved',
-      updatedAt: serverTimestamp()
-    });
-    fetchAll();
+    try {
+      await updateDoc(doc(db, 'portal_deals', id), {
+        status: 'approved',
+        Status: 'approved',
+        updatedAt: serverTimestamp()
+      });
+      fetchAll();
+    } catch (err) { console.error(err); }
   };
 
   const PLATFORMS = ['Instagram','YouTube','Facebook','Twitter/X','LinkedIn','Other'];

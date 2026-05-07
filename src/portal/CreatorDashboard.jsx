@@ -82,12 +82,14 @@ export default function CreatorDashboard() {
           upiId: creatorData.upiId || ''
         });
 
-        // 2. Fetch assigned deals (Check both creatorId and CreatorId due to migration)
+        // 2. Fetch assigned deals (Very robust check: ID or Name)
         const dq = query(
           collection(db, 'portal_deals'), 
           or(
             where('creatorId', '==', creatorData.id),
-            where('CreatorId', '==', creatorData.id)
+            where('CreatorId', '==', creatorData.id),
+            where('creatorName', '==', creatorData.name),
+            where('CreatorName', '==', creatorData.name)
           )
         );
         const dSnap = await getDocs(dq);
@@ -106,12 +108,14 @@ export default function CreatorDashboard() {
         fetchedDeals.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
         setDeals(fetchedDeals);
 
-        // 3. Fetch invoices (Check both creatorId and CreatorId)
+        // 3. Fetch invoices (Check by ID or Name)
         const iq = query(
           collection(db, 'portal_invoices'), 
           or(
             where('creatorId', '==', creatorData.id),
-            where('CreatorId', '==', creatorData.id)
+            where('CreatorId', '==', creatorData.id),
+            where('creatorName', '==', creatorData.name),
+            where('CreatorName', '==', creatorData.name)
           )
         );
         const iSnap = await getDocs(iq);
