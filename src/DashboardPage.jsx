@@ -125,7 +125,7 @@ function LeadsPanel({ activeTab }) {
                   <td>
                     <div style={{display:'flex',gap:'0.5rem'}}>
                       <button className="row-view-btn" onClick={() => setSelectedRow(row)}><Search size={18}/></button>
-                      <button className="row-delete-btn" onClick={() => handleDelete(row._id)}><Trash2 size={18}/></button>
+                      <button className="row-delete-btn" onClick={() => handleDelete(row.id)}><Trash2 size={18}/></button>
                     </div>
                   </td>
                 </tr>
@@ -564,9 +564,9 @@ function DealsPanel() {
                   <td><StatusBadge status={d.status}/></td>
                   <td style={{display: 'flex', gap: '0.5rem'}}>
                     {d.status === 'locked' && (
-                      <button className="portal-btn portal-btn--sm portal-btn--primary" onClick={() => handleApproveDeal(d._id)}>Approve</button>
+                      <button className="portal-btn portal-btn--sm portal-btn--primary" onClick={() => handleApproveDeal(d.id)}>Approve</button>
                     )}
-                    <button className="row-delete-btn" onClick={() => handleDelete(d._id)}><Trash2 size={16}/></button>
+                    <button className="row-delete-btn" onClick={() => handleDelete(d.id)}><Trash2 size={16}/></button>
                   </td>
                 </tr>
               ))}
@@ -690,17 +690,17 @@ function SubmissionsPanel() {
           {subs.length === 0 && <div className="dash-empty"><Filter size={48}/><h3>No submissions yet</h3></div>}
           {subs.map(sub => (
             <div key={sub.id} className="admin-sub-card">
-              <div className="admin-sub-card__header" onClick={() => setExpanded(expanded === sub._id ? null : sub._id)}>
+              <div className="admin-sub-card__header" onClick={() => setExpanded(expanded === sub.id ? null : sub.id)}>
                 <div>
                   <span className="row-name">{sub.dealTitle}</span>
                   <span style={{marginLeft:'1rem',color:'var(--dash-muted)',fontSize:'0.85rem'}}>{sub.creatorName}</span>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:'1rem'}}>
                   <StatusBadge status={sub.status}/>
-                  {expanded === sub._id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+                  {expanded === sub.id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
                 </div>
               </div>
-              {expanded === sub._id && (
+              {expanded === sub.id && (
                 <div className="admin-sub-card__body">
                   <div className="admin-sub-grid">
                     <div className="portal-review-section">
@@ -777,11 +777,11 @@ function SubmissionsPanel() {
                       <div className="admin-form-grid" style={{marginBottom: '1rem'}}>
                         <div className="portal-field">
                           <label>UTR ID *</label>
-                          <input type="text" placeholder="Enter UTR..." value={paymentForms[sub._id]?.utrId || ''} onChange={e => setPaymentForms(p => ({...p, [sub._id]: {...(p[sub._id]||{}), utrId: e.target.value}}))} />
+                          <input type="text" placeholder="Enter UTR..." value={paymentForms[sub.id]?.utrId || ''} onChange={e => setPaymentForms(p => ({...p, [sub.id]: {...(p[sub.id]||{}), utrId: e.target.value}}))} />
                         </div>
                         <div className="portal-field">
                           <label>Payment Screenshot</label>
-                          <input type="file" accept="image/*" onChange={e => setPaymentForms(p => ({...p, [sub._id]: {...(p[sub._id]||{}), file: e.target.files[0]}}))} />
+                          <input type="file" accept="image/*" onChange={e => setPaymentForms(p => ({...p, [sub.id]: {...(p[sub.id]||{}), file: e.target.files[0]}}))} />
                         </div>
                       </div>
                       <div className="admin-sub-actions">

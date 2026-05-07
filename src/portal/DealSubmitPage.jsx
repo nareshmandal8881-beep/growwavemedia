@@ -73,14 +73,25 @@ export default function DealSubmitPage() {
       if (!user) { navigate('/portal/login'); return; }
       setLoading(true);
       try {
-        // 1. Fetch creator profile from Firestore
-        const creatorRef = doc(db, 'portal_creators', user.uid);
-        const creatorSnap = await getDoc(creatorRef);
+        // 1. Fetch creator profile - first try by UID, then by email
+        let creatorRef = doc(db, 'portal_creators', user.uid);
+        let creatorSnap = await getDoc(creatorRef);
         
-        if (!creatorSnap.exists()) { 
-          await auth.signOut();
-          navigate('/portal/login'); 
-          return; 
+        if (!creatorSnap.exists()) {
+          // Try to find by email (for creators added by admin before they logged in)
+          const emailQ = query(collection(db, 'portal_creators'), where('email', '==', user.email));
+          const emailSnap = await getDocs(emailQ);
+          if (!emailSnap.empty) {
+            const foundDoc = emailSnap.docs[0];
+            creatorRef = doc(db, 'portal_creators', foundDoc.id);
+            // Link this UID to the found doc so future lookups work by UID
+            await updateDoc(creatorRef, { uid: user.uid, updatedAt: serverTimestamp() });
+            creatorSnap = await getDoc(creatorRef);
+          } else {
+            await auth.signOut();
+            navigate('/portal/login');
+            return;
+          }
         }
         const creatorData = { id: creatorSnap.id, ...creatorSnap.data() };
         setCreator(creatorData);

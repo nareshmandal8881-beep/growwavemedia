@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { 
-  doc, getDoc, updateDoc, collection, query, where, 
+  doc, getDoc, updateDoc, setDoc, collection, query, where, 
   getDocs, orderBy, serverTimestamp, or 
 } from 'firebase/firestore';
 import { Helmet } from 'react-helmet-async';
@@ -290,20 +290,20 @@ export default function CreatorDashboard() {
                             )}
                             {deal.status === 'approved' && (
                               <Link
-                                to={`/portal/deal/${deal._id}`}
+                                to={`/portal/deal/${deal.id}`}
                                 className="portal-btn portal-btn--primary"
                               >
                                 Submit Video →
                               </Link>
                             )}
-                            {deal.status === 'submitted' && (
+                            {(deal.status === 'submitted' || deal.status === 'submitted_video') && (
                               <span className="portal-deal-submitted-note">
                                 ✓ Video Submitted — awaiting admin review/payment
                               </span>
                             )}
                             {deal.status === 'rejected' && (
                               <Link
-                                to={`/portal/deal/${deal._id}`}
+                                to={`/portal/deal/${deal.id}`}
                                 className="portal-btn portal-btn--danger"
                               >
                                 Resubmit Video →
@@ -346,7 +346,7 @@ export default function CreatorDashboard() {
                         </thead>
                         <tbody>
                           {invoices.map((inv) => (
-                            <tr key={inv._id}>
+                            <tr key={inv.id}>
                               <td className="portal-mono">{inv.invoiceId}</td>
                               <td>{inv.dealTitle}</td>
                               <td>₹{Number(inv.amount || 0).toLocaleString('en-IN')}</td>
@@ -354,7 +354,7 @@ export default function CreatorDashboard() {
                               <td><StatusBadge status={inv.status} /></td>
                               <td>
                                 <Link
-                                  to={`/portal/invoice/${inv._id}`}
+                                  to={`/portal/invoice/${inv.id}`}
                                   className="portal-btn portal-btn--sm portal-btn--ghost"
                                 >
                                   {inv.status === 'pending_signature' ? 'Sign Now' : 'View'}
