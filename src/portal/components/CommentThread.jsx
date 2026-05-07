@@ -15,27 +15,24 @@ export default function CommentThread({ submissionId, isAdmin }) {
   const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    return unsub;
-  }, []);
-
-  const fetchComments = async () => {
     if (!submissionId) return;
-    try {
-      const res = await fetch(`${API_BASE}/comments/submission/${submissionId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setComments(data);
-      }
-    } catch (err) {
-      console.error("Fetch Comments Error:", err);
-    }
-  };
+    
+    const q = query(
+      collection(db, 'comments'),
+      where('submissionId', '==', submissionId),
+      orderBy('createdAt', 'asc')
+    );
 
-  useEffect(() => {
-    fetchComments();
-    const interval = setInterval(fetchComments, 5000); // Polling every 5s
-    return () => clearInterval(interval);
+    const unsub = onSnapshot(q, (snap) => {
+      const data = snap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate()
+      }));
+      setComments(data);
+    });
+
+    return unsub;
   }, [submissionId]);
 
   useEffect(() => {
@@ -48,18 +45,14 @@ export default function CommentThread({ submissionId, isAdmin }) {
     const senderName = isAdmin ? 'Admin' : (user?.displayName || user?.email || 'Creator');
     
     try {
-      await fetch(`${API_BASE}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          submissionId,
-          text: text.trim(),
-          sender: senderName,
-          isAdmin: !!isAdmin
-        })
+      await addDoc(collection(db, 'comments'), {
+        submissionId,
+        text: text.trim(),
+        sender: senderName,
+        isAdmin: !!isAdmin,
+        createdAt: serverTimestamp()
       });
       setText('');
-      fetchComments();
     } catch (err) {
       console.error("Send Comment Error:", err);
     }

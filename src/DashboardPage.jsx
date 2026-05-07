@@ -7,7 +7,10 @@ import {
   ChevronDown, ChevronUp, Eye, Receipt, Download
 } from 'lucide-react';
 import { db, auth, storage } from './firebase';
-const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
+import { 
+  collection, getDocs, doc, setDoc, addDoc, updateDoc, deleteDoc, 
+  query, where, orderBy, serverTimestamp, getDoc 
+} from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import StatusBadge from './portal/components/StatusBadge';
@@ -30,9 +33,14 @@ function LeadsPanel({ activeTab }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/leads`);
-      const json = await res.json();
-      setData(json);
+      const q = query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const leads = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date()
+      }));
+      setData(leads);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -46,10 +54,7 @@ function LeadsPanel({ activeTab }) {
     }
     if (!window.confirm('Delete this lead?')) return;
     try {
-      const res = await fetch(`${API_BASE}/leads/${id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        throw new Error('Failed to delete lead from server');
-      }
+      await deleteDoc(doc(db, 'leads', id));
       fetchData();
     } catch (err) {
       alert("Error deleting lead: " + err.message);
@@ -206,14 +211,12 @@ function CreatorsPanel() {
   const handleUpdateCreator = async () => {
     setUpdating(true);
     try {
-      const res = await fetch(`${API_BASE}/creators/${selectedCreator._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedCreator)
+      const creatorRef = doc(db, 'creators', selectedCreator.id);
+      await updateDoc(creatorRef, {
+        ...selectedCreator,
+        updatedAt: serverTimestamp()
       });
-      if (!res.ok) throw new Error('Failed to update creator');
-      const updated = await res.json();
-      setCreators(prev => prev.map(c => c._id === updated._id ? updated : c));
+      setCreators(prev => prev.map(c => c.id === selectedCreator.id ? selectedCreator : c));
       alert('Creator details updated successfully!');
       setSelectedCreator(null);
     } catch (err) {
@@ -226,8 +229,11 @@ function CreatorsPanel() {
   const fetchCreators = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/creators`);
-      const data = await res.json();
+      const querySnapshot = await getDocs(collection(db, 'creators'));
+      const data = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
       setCreators(data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -243,29 +249,24 @@ function CreatorsPanel() {
       const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
       await updateProfile(cred.user, { displayName: form.name });
       
-      // 2. Create in MongoDB
-      const res = await fetch(`${API_BASE}/creators`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uid: cred.user.uid,
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          channelName: form.channelName,
-          youtubeLink: form.youtubeLink,
-          instagramLink: form.instagramLink,
-          creatorAddress: form.creatorAddress,
-          accountHolder: form.accountHolder,
-          bankName: form.bankName,
-          ifscCode: form.ifscCode,
-          accountNumber: form.accountNumber,
-          upiId: form.upiId,
-        })
+      // 2. Create in Firestore
+      await setDoc(doc(db, 'creators', cred.user.uid), {
+        uid: cred.user.uid,
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        channelName: form.channelName,
+        youtubeLink: form.youtubeLink,
+        instagramLink: form.instagramLink,
+        creatorAddress: form.creatorAddress || 'N/A',
+        accountHolder: form.accountHolder || 'N/A',
+        bankName: form.bankName || 'N/A',
+        ifscCode: form.ifscCode || 'N/A',
+        accountNumber: form.accountNumber || 'N/A',
+        upiId: form.upiId || 'N/A',
+        createdAt: serverTimestamp()
       });
       
-      if (!res.ok) throw new Error('Failed to save creator profile to MongoDB');
-
       setShowForm(false);
       setForm({ name:'', email:'', phone:'', channelName:'', youtubeLink:'', instagramLink:'', paymentDetails:'', password:'' });
       fetchCreators();
@@ -308,7 +309,7 @@ function CreatorsPanel() {
             <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Channel Name</th><th>Action</th></tr></thead>
             <tbody>
               {creators.map(c => (
-                <tr key={c._id}>
+                <tr key={c.id}>
                   <td><div className="row-name">{c.name}</div></td>
                   <td><div className="row-email">{c.email}</div></td>
                   <td><div className="row-phone">{c.phone || '—'}</div></td>
@@ -399,11 +400,12 @@ function DealsPanel() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [dres, cres] = await Promise.all([
-        fetch(`${API_BASE}/deals`),
-        fetch(`${API_BASE}/creators`)
+      const [dSnap, cSnap] = await Promise.all([
+        getDocs(collection(db, 'deals')),
+        getDocs(collection(db, 'creators'))
       ]);
-      const [dData, cData] = await Promise.all([dres.json(), cres.json()]);
+      const dData = dSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const cData = cSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setDeals(dData);
       setCreators(cData);
     } catch (err) { console.error(err); }
@@ -416,20 +418,16 @@ function DealsPanel() {
     e.preventDefault();
     setSaving(true);
     try {
-      const creator = creators.find(c => c._id === form.creatorId);
-      const res = await fetch(`${API_BASE}/deals`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          creatorName: creator?.name || '',
-          channelName: creator?.channelName || '',
-          youtubeLink: creator?.youtubeLink || '',
-          instagramLink: creator?.instagramLink || '',
-          status: 'locked'
-        })
+      const creator = creators.find(c => c.id === form.creatorId);
+      await addDoc(collection(db, 'deals'), {
+        ...form,
+        creatorName: creator?.name || '',
+        channelName: creator?.channelName || '',
+        youtubeLink: creator?.youtubeLink || '',
+        instagramLink: creator?.instagramLink || '',
+        status: 'locked',
+        createdAt: serverTimestamp()
       });
-      if (!res.ok) throw new Error('Failed to create deal');
       setShowForm(false);
       setForm({ title:'', creatorId:'', deliverables:'', amount:'', platform:'', videoType:'', deadline:'' });
       fetchAll();
@@ -439,16 +437,15 @@ function DealsPanel() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this deal?')) return;
-    await fetch(`${API_BASE}/deals/${id}`, { method: 'DELETE' });
+    await deleteDoc(doc(db, 'deals', id));
     fetchAll();
   };
 
   const handleApproveDeal = async (id) => {
     if (!window.confirm('Approve this deal and notify the creator?')) return;
-    await fetch(`${API_BASE}/deals/${id}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'approved' })
+    await updateDoc(doc(db, 'deals', id), {
+      status: 'approved',
+      updatedAt: serverTimestamp()
     });
     fetchAll();
   };
@@ -474,7 +471,7 @@ function DealsPanel() {
             <div className="portal-field"><label>Assign Creator *</label>
               <select value={form.creatorId} required onChange={e => setForm(p=>({...p,creatorId:e.target.value}))}>
                 <option value="">Select creator…</option>
-                {creators.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                {creators.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div className="portal-field"><label>Platform</label>
@@ -513,7 +510,7 @@ function DealsPanel() {
             <thead><tr><th>Title</th><th>Creator</th><th>Video Type</th><th>Amount</th><th>Deadline</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
               {deals.map(d => (
-                <tr key={d._id}>
+                <tr key={d.id}>
                   <td><div className="row-name">{d.title}</div></td>
                   <td><div>{d.creatorName}</div></td>
                   <td><div>{d.videoType || '—'}</div></td>
@@ -549,8 +546,12 @@ function SubmissionsPanel() {
   const fetchSubs = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/submissions`);
-      const data = await res.json();
+      const q = query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const data = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
       setSubs(data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -559,7 +560,7 @@ function SubmissionsPanel() {
   useEffect(() => { fetchSubs(); }, []);
 
   const handleApproveAndPay = async (sub) => {
-    const pForm = paymentForms[sub._id] || {};
+    const pForm = paymentForms[sub.id] || {};
     if (!pForm.utrId) {
       alert("Please enter a UTR ID to mark as paid.");
       return;
@@ -568,40 +569,35 @@ function SubmissionsPanel() {
     try {
       let proofUrl = '';
       if (pForm.file) {
-        const storageRef = ref(storage, `admin_payments/${sub._id}/${Date.now()}_${pForm.file.name}`);
+        const storageRef = ref(storage, `admin_payments/${sub.id}/${Date.now()}_${pForm.file.name}`);
         await uploadBytes(storageRef, pForm.file);
         proofUrl = await getDownloadURL(storageRef);
       }
 
-      // 1. Update submission in MongoDB
-      await fetch(`${API_BASE}/submissions/${sub._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: 'paid',
-          adminUtrId: pForm.utrId,
-          adminProofUrl: proofUrl
-        })
+      // 1. Update submission in Firestore
+      await updateDoc(doc(db, 'submissions', sub.id), {
+        status: 'paid',
+        adminUtrId: pForm.utrId,
+        adminProofUrl: proofUrl,
+        updatedAt: serverTimestamp()
       });
 
-      // 2. Find and update invoice in MongoDB
-      // For simplicity in this demo, we'll assume the API handles the update or we fetch by dealId
-      // I'll add a helper to update invoice by dealId
-      const ires = await fetch(`${API_BASE}/invoices/creator/${sub.creatorId}`);
-      if (ires.ok) {
-        const invs = await ires.json();
-        const targetInv = invs.find(i => i.dealId === sub.dealId && i.status === 'pending_payment');
-        if (targetInv) {
-          await fetch(`${API_BASE}/invoices/${targetInv._id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              status: 'paid',
-              utrId: pForm.utrId,
-              adminProofUrl: proofUrl || ''
-            })
-          });
-        }
+      // 2. Find and update invoice in Firestore
+      const q = query(
+        collection(db, 'invoices'), 
+        where('creatorId', '==', sub.creatorId),
+        where('dealId', '==', sub.dealId),
+        where('status', '==', 'pending_payment')
+      );
+      const invSnap = await getDocs(q);
+      if (!invSnap.empty) {
+        const invDoc = invSnap.docs[0];
+        await updateDoc(doc(db, 'invoices', invDoc.id), {
+          status: 'paid',
+          utrId: pForm.utrId,
+          adminProofUrl: proofUrl || '',
+          updatedAt: serverTimestamp()
+        });
       }
 
       alert(`✅ Paid & Approved!`);
@@ -616,15 +612,14 @@ function SubmissionsPanel() {
   const handleReject = async (sub) => {
     const note = rejectNote || 'Rejected by admin.';
     try {
-      await fetch(`${API_BASE}/submissions/${sub._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'rejected', rejectReason: note })
+      await updateDoc(doc(db, 'submissions', sub.id), {
+        status: 'rejected',
+        rejectReason: note,
+        updatedAt: serverTimestamp()
       });
-      await fetch(`${API_BASE}/deals/${sub.dealId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'rejected' })
+      await updateDoc(doc(db, 'deals', sub.dealId), {
+        status: 'rejected',
+        updatedAt: serverTimestamp()
       });
       setRejectNote('');
       fetchSubs();
@@ -641,7 +636,7 @@ function SubmissionsPanel() {
         <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
           {subs.length === 0 && <div className="dash-empty"><Filter size={48}/><h3>No submissions yet</h3></div>}
           {subs.map(sub => (
-            <div key={sub._id} className="admin-sub-card">
+            <div key={sub.id} className="admin-sub-card">
               <div className="admin-sub-card__header" onClick={() => setExpanded(expanded === sub._id ? null : sub._id)}>
                 <div>
                   <span className="row-name">{sub.dealTitle}</span>
@@ -754,7 +749,7 @@ function SubmissionsPanel() {
                     </div>
                   )}
 
-                  <CommentThread submissionId={sub._id} isAdmin={true}/>
+                  <CommentThread submissionId={sub.id} isAdmin={true}/>
                 </div>
               )}
             </div>
@@ -774,8 +769,11 @@ function InvoicesPanel() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/invoices`);
-        const data = await res.json();
+        const querySnapshot = await getDocs(query(collection(db, 'invoices'), orderBy('createdAt', 'desc')));
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
         setInvoices(data);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
@@ -791,7 +789,7 @@ function InvoicesPanel() {
             <thead><tr><th>Invoice ID</th><th>Creator</th><th>Deal</th><th>Amount</th><th>Date</th><th>Status</th><th>View</th></tr></thead>
             <tbody>
               {invoices.map(inv => (
-                <tr key={inv._id}>
+                <tr key={inv.id}>
                   <td><div style={{fontFamily:'monospace',fontSize:'0.8rem'}}>{inv.invoiceId}</div></td>
                   <td><div>{inv.creatorName}</div></td>
                   <td><div>{inv.dealTitle}</div></td>
@@ -799,7 +797,7 @@ function InvoicesPanel() {
                   <td><div>{inv.date}</div></td>
                   <td><StatusBadge status={inv.status}/></td>
                   <td>
-                    <Link to={`/portal/invoice/${inv._id}`} className="row-view-btn" title="View Invoice">
+                    <Link to={`/portal/invoice/${inv.id}`} className="row-view-btn" title="View Invoice">
                       <Eye size={18}/>
                     </Link>
                   </td>

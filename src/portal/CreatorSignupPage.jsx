@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Helmet } from 'react-helmet-async';
 
 export default function CreatorSignupPage() {
@@ -24,21 +24,16 @@ export default function CreatorSignupPage() {
       // 2. Update display name
       await updateProfile(cred.user, { displayName: form.name });
 
-      // 3. Create document in MongoDB via API
-      const res = await fetch((import.meta.env.PROD ? '/api/creators' : 'http://localhost:5000/api/creators'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uid: cred.user.uid,
-          name: form.name,
-          email: form.email,
-          channelName: form.channelName,
-          youtubeLink: form.youtubeLink,
-          instagramLink: form.instagramLink,
-        })
+      // 3. Create document in Firestore
+      await setDoc(doc(db, 'creators', cred.user.uid), {
+        uid: cred.user.uid,
+        name: form.name,
+        email: form.email,
+        channelName: form.channelName,
+        youtubeLink: form.youtubeLink,
+        instagramLink: form.instagramLink,
+        createdAt: serverTimestamp()
       });
-
-      if (!res.ok) throw new Error('Failed to create creator profile in MongoDB');
 
       // 4. Redirect to dashboard
       navigate('/portal/dashboard');

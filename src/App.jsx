@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { FaYoutube, FaLinkedin, FaFacebook } from 'react-icons/fa';
 import { Helmet } from 'react-helmet-async';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from './firebase';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import EnrollmentModal from './components/EnrollmentModal';
@@ -153,24 +155,21 @@ export default function App() {
     const { name, email, phone, service, message } = formData;
 
     try {
-      // 1. SAVE TO MONGODB VIA API
-      await fetch((import.meta.env.PROD ? '/api/leads' : 'http://localhost:5000/api/leads'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'contact_form',
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message,
-          website: formData.service || 'General'
-        })
+      // 1. SAVE TO FIREBASE FIRESTORE
+      await addDoc(collection(db, 'leads'), {
+        type: 'contact_form',
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message,
+        website: formData.service || 'General',
+        createdAt: serverTimestamp()
       });
 
       setStatus('success');
       setFormData({ name: '', email: '', phone: '', service: '', message: '' });
     } catch (err) {
-      console.error(err);
+      console.error("Firebase Error:", err);
       setStatus('error');
     }
   };

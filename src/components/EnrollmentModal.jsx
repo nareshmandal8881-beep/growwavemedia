@@ -66,31 +66,25 @@ export default function EnrollmentModal({ isOpen, onClose }) {
     setIsSubmitting(true);
 
     try {
-      // 1. SAVE TO MONGODB VIA API
-      await fetch((import.meta.env.PROD ? '/api/leads' : 'http://localhost:5000/api/leads'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: userType,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          handleCompany: formData.igHandle || formData.company || 'N/A',
-          nicheWebsite: formData.niche || formData.website || 'N/A',
-          followers: formData.igFollowers || 'N/A',
-          message: formData.message,
-          ytName: formData.ytName || 'N/A',
-          ytLink: formData.ytLink || 'N/A',
-          ytSubs: formData.ytSubs || 'N/A',
-          igHandle: formData.igHandle || 'N/A',
-          igLink: formData.igLink || 'N/A',
-          igFollowers: formData.igFollowers || 'N/A',
-          fbName: formData.fbName || 'N/A',
-          fbLink: formData.fbLink || 'N/A',
-          fbFollowers: formData.fbFollowers || 'N/A',
-          company: formData.company || 'N/A',
-          website: formData.website || 'N/A'
-        })
+      // 1. SAVE TO FIREBASE FIRESTORE
+      await addDoc(collection(db, 'leads'), {
+        type: userType,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message,
+        ytName: formData.ytName || 'N/A',
+        ytLink: formData.ytLink || 'N/A',
+        ytSubs: formData.ytSubs || 'N/A',
+        igHandle: formData.igHandle || 'N/A',
+        igLink: formData.igLink || 'N/A',
+        igFollowers: formData.igFollowers || 'N/A',
+        fbName: formData.fbName || 'N/A',
+        fbLink: formData.fbLink || 'N/A',
+        fbFollowers: formData.fbFollowers || 'N/A',
+        company: formData.company || 'N/A',
+        website: formData.website || 'N/A',
+        createdAt: serverTimestamp()
       });
 
       // 2. PREPARE WHATSAPP MESSAGE

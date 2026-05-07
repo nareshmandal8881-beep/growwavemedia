@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Helmet } from 'react-helmet-async';
 
 export default function CreatorLoginPage() {
@@ -19,18 +19,18 @@ export default function CreatorLoginPage() {
     setLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, form.email, form.password);
-      // Verify creator exists in MongoDB
-      const res = await fetch(`${import.meta.env.PROD ? '/api' : 'http://localhost:5000/api'}/creators/uid/${cred.user.uid}`);
-      if (!res.ok) {
-        // Auto-heal: If user exists in Auth but MongoDB doc is missing
-        await fetch((import.meta.env.PROD ? '/api/creators' : 'http://localhost:5000/api/creators'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            uid: cred.user.uid,
-            name: cred.user.displayName || cred.user.email.split('@')[0],
-            email: cred.user.email,
-          })
+      
+      // Verify creator exists in Firestore
+      const creatorRef = doc(db, 'creators', cred.user.uid);
+      const creatorSnap = await getDoc(creatorRef);
+      
+      if (!creatorSnap.exists()) {
+        // Auto-heal: If user exists in Auth but Firestore doc is missing
+        await setDoc(creatorRef, {
+          uid: cred.user.uid,
+          name: cred.user.displayName || cred.user.email.split('@')[0],
+          email: cred.user.email,
+          createdAt: serverTimestamp()
         });
       }
       navigate('/portal/dashboard');

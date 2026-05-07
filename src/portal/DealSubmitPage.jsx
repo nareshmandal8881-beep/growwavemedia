@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { auth, db, storage } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import {
-  serverTimestamp,
+import { 
+  doc, getDoc, updateDoc, setDoc, collection, query, where, 
+  getDocs, serverTimestamp, addDoc 
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Helmet } from 'react-helmet-async';
@@ -72,66 +73,26 @@ export default function DealSubmitPage() {
       if (!user) { navigate('/portal/login'); return; }
       setLoading(true);
       try {
-        // 1. Fetch creator profile from MongoDB
-        const cres = await fetch(`${API_BASE}/creators/uid/${user.uid}`);
-        if (!cres.ok) { 
+        // 1. Fetch creator profile from Firestore
+        const creatorRef = doc(db, 'creators', user.uid);
+        const creatorSnap = await getDoc(creatorRef);
+        
+        if (!creatorSnap.exists()) { 
           await auth.signOut();
           navigate('/portal/login'); 
           return; 
         }
-        const creatorData = await cres.json();
+        const creatorData = { id: creatorSnap.id, ...creatorSnap.data() };
         setCreator(creatorData);
 
-        // 2. Fetch deal details from MongoDB
-        const dres = await fetch(`${API_BASE}/deals/${id}`);
-        if (!dres.ok) { navigate('/portal/dashboard'); return; }
-        const dealData = await dres.json();
+        // 2. Fetch deal details from Firestore
+        const dealRef = doc(db, 'deals', id);
+        const dealSnap = await getDoc(dealRef);
+        
+        if (!dealSnap.exists()) { navigate('/portal/dashboard'); return; }
+        const dealData = { id: dealSnap.id, ...dealSnap.data() };
         setDeal(dealData);
 
-        // 3. Check for existing submission in MongoDB
-        const sres = await fetch(`${API_BASE}/submissions/deal/${id}`);
-        if (sres.ok) {
-          const sub = await sres.json();
-          if (sub) {
-            setExistingSubId(sub._id);
-            setForm((f) => ({
-              ...f,
-              videoLink: sub.videoLink || '',
-              timestamp: sub.timestamp || '',
-              channelName: sub.channelName || f.channelName || '',
-              creatorAddress: sub.creatorAddress || f.creatorAddress || '',
-              accountHolder: sub.accountHolder || f.accountHolder || '',
-              bankName: sub.bankName || f.bankName || '',
-              ifscCode: sub.ifscCode || f.ifscCode || '',
-              accountNumber: sub.accountNumber || f.accountNumber || '',
-              upiId: sub.upiId || f.upiId || '',
-            }));
-            if (sub.signatureUrl) {
-              if (sub.signatureUrl.includes('firebasestorage')) {
-                setUploadedSigUrl(sub.signatureUrl);
-                setSigPreview(sub.signatureUrl);
-              } else {
-                setForm(f => ({ ...f, signatureLink: sub.signatureUrl }));
-              }
-            }
-          } else {
-            // Pre-fill from creator profile if no submission yet
-            setForm((f) => ({
-              ...f,
-              channelName: creatorData.channelName || '',
-              creatorAddress: creatorData.creatorAddress || '',
-              accountHolder: creatorData.accountHolder || '',
-              bankName: creatorData.bankName || '',
-              ifscCode: creatorData.ifscCode || '',
-              accountNumber: creatorData.accountNumber || '',
-              upiId: creatorData.upiId || '',
-            }));
-            if (creatorData.signatureUrl) {
-              if (creatorData.signatureUrl.includes('firebasestorage')) {
-                setUploadedSigUrl(creatorData.signatureUrl);
-                setSigPreview(creatorData.signatureUrl);
-              } else {
-                setForm(f => ({ ...f, signatureLink: creatorData.signatureUrl }));
               }
             }
           }
@@ -236,7 +197,7 @@ export default function DealSubmitPage() {
       const subData = {
         dealId: id,
         dealTitle: deal.title,
-        creatorId: creator._id,
+        creatorId: creator.id,
         creatorName: creator.name,
         videoLink: form.videoLink,
         uploadedVideoUrl: '',
@@ -252,73 +213,60 @@ export default function DealSubmitPage() {
         upiId: form.upiId,
         billingPeriod: form.billingPeriod,
         signatureData: '',
-        signatureUrl: finalSigUrl || form.signatureLink,
+        signatureUrl: finalSigUrl,
         amount: deal.amount || '',
         videoType: deal.videoType || '',
         status: 'submitted_video',
+        createdAt: serverTimestamp()
       };
 
-      const sres = await fetch(`${API_BASE}/submissions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(subData)
-      });
-      if (!sres.ok) throw new Error('Failed to save submission');
+      if (existingSubId) {
+        await updateDoc(doc(db, 'submissions', existingSubId), {
+          ...subData,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        await addDoc(collection(db, 'submissions'), subData);
+      }
 
       setSubTask('Updating Deal...');
-      await fetch(`${API_BASE}/deals/${id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'submitted_video' })
+      await updateDoc(doc(db, 'deals', id), { 
+        status: 'submitted_video',
+        updatedAt: serverTimestamp()
       });
 
       setSubTask('Syncing Profile...');
-      await fetch(`${API_BASE}/creators/${creator._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          channelName: form.channelName,
-          creatorAddress: form.creatorAddress,
-          accountHolder: form.accountHolder,
-          bankName: form.bankName,
-          ifscCode: form.ifscCode,
-          accountNumber: form.accountNumber,
-          upiId: form.upiId,
-          signatureUrl: finalSigUrl || form.signatureLink,
-        })
+      await updateDoc(doc(db, 'creators', creator.id), {
+        channelName: form.channelName,
+        creatorAddress: form.creatorAddress,
+        accountHolder: form.accountHolder,
+        bankName: form.bankName,
+        ifscCode: form.ifscCode,
+        accountNumber: form.accountNumber,
+        upiId: form.upiId,
+        signatureUrl: finalSigUrl,
+        updatedAt: serverTimestamp()
       });
 
       setSubTask('Generating Invoice...');
-      const invId = generateInvoiceId();
-      await fetch(`${API_BASE}/invoices`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          invoiceId: invId,
-          dealId: id,
-          dealTitle: deal.title,
-          creatorId: creator._id,
-          creatorName: creator.name,
-          creatorEmail: creator.email || '',
-          creatorPhone: creator.phone || '',
-          videoType: deal.videoType || '',
-          amount: deal.amount || '',
-          platform: selectedPlatform,
-          utrId: '',
-          adminProofUrl: '',
-          signatureData: '',
-          signatureUrl: finalSigUrl || form.signatureLink,
-          channelName: form.channelName,
-          creatorAddress: form.creatorAddress,
-          accountHolder: form.accountHolder,
-          bankName: form.bankName,
-          ifscCode: form.ifscCode,
-          accountNumber: form.accountNumber,
-          upiId: form.upiId,
-          billingPeriod: form.billingPeriod,
-          status: 'pending_payment',
-          date: new Date().toLocaleDateString('en-IN'),
-        })
+      await addDoc(collection(db, 'invoices'), {
+        invoiceId: generateInvoiceId(),
+        dealId: id,
+        creatorId: creator.id,
+        dealTitle: deal.title,
+        creatorName: creator.name,
+        channelName: form.channelName,
+        creatorAddress: form.creatorAddress,
+        accountHolder: form.accountHolder,
+        bankName: form.bankName,
+        ifscCode: form.ifscCode,
+        accountNumber: form.accountNumber,
+        upiId: form.upiId,
+        amount: deal.amount,
+        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+        status: 'pending_payment',
+        signatureUrl: finalSigUrl,
+        createdAt: serverTimestamp()
       });
 
       setSubTask('Done!');

@@ -2,7 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-const API_BASE = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
+import { 
+  doc, getDoc, updateDoc, collection, query, where, 
+  getDocs, orderBy, serverTimestamp 
+} from 'firebase/firestore';
 import { Helmet } from 'react-helmet-async';
 import StatusBadge from './components/StatusBadge';
 import {
@@ -37,10 +40,13 @@ export default function CreatorDashboard() {
       if (!user) { navigate('/portal/login'); return; }
       setLoading(true);
       try {
-        // 1. Fetch creator profile from MongoDB
-        const cres = await fetch(`${API_BASE}/creators/uid/${user.uid}`);
-        if (!cres.ok) { await signOut(auth); navigate('/portal/login'); return; }
-        const creatorData = await cres.json();
+        // 1. Fetch creator profile from Firestore
+        const creatorRef = doc(db, 'creators', user.uid);
+        const creatorSnap = await getDoc(creatorRef);
+        
+        if (!creatorSnap.exists()) { await signOut(auth); navigate('/portal/login'); return; }
+        
+        const creatorData = { id: creatorSnap.id, ...creatorSnap.data() };
         setCreator(creatorData);
         setProfileForm({
           phone: creatorData.phone || '',
@@ -55,22 +61,21 @@ export default function CreatorDashboard() {
           upiId: creatorData.upiId || ''
         });
 
-        // 2. Fetch assigned deals from MongoDB
-        const dres = await fetch(`${API_BASE}/deals/creator/${creatorData._id}`);
-        if (dres.ok) {
-          const fetchedDeals = await dres.json();
-          setDeals(fetchedDeals);
-        }
+        // 2. Fetch assigned deals from Firestore
+        const dq = query(collection(db, 'deals'), where('creatorId', '==', user.uid), orderBy('createdAt', 'desc'));
+        const dSnap = await getDocs(dq);
+        const fetchedDeals = dSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setDeals(fetchedDeals);
 
-        // 3. Fetch invoices from MongoDB
-        const ires = await fetch(`${API_BASE}/invoices/creator/${creatorData._id}`);
-        if (ires.ok) {
-          const fetchedInvoices = await ires.json();
-          setInvoices(fetchedInvoices);
-        }
+        // 3. Fetch invoices from Firestore
+        const iq = query(collection(db, 'invoices'), where('creatorId', '==', user.uid), orderBy('createdAt', 'desc'));
+        const iSnap = await getDocs(iq);
+        const fetchedInvoices = iSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setInvoices(fetchedInvoices);
+
       } catch (err) {
         console.error(err);
-        alert("Error fetching data: " + err.message);
+        // alert("Error fetching data: " + err.message); // Temporarily commented out to avoid annoying alerts during dev
       } finally {
         setLoading(false);
       }
@@ -87,14 +92,12 @@ export default function CreatorDashboard() {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      const res = await fetch(`${API_BASE}/creators/${creator._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileForm)
+      const creatorRef = doc(db, 'creators', creator.id);
+      await updateDoc(creatorRef, {
+        ...profileForm,
+        updatedAt: serverTimestamp()
       });
-      if (!res.ok) throw new Error('Failed to update profile');
-      const updatedCreator = await res.json();
-      setCreator(updatedCreator);
+      setCreator(prev => ({ ...prev, ...profileForm }));
       setIsEditingProfile(false);
       alert('Profile updated successfully!');
     } catch (err) {

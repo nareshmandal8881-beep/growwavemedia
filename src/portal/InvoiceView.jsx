@@ -20,12 +20,13 @@ export default function InvoiceView() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) { navigate('/portal/login'); return; }
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/invoices/${id}`);
-        if (!res.ok) { navigate('/portal/dashboard'); return; }
-        const data = await res.json();
-        setInvoice(data);
+        const invoiceRef = doc(db, 'invoices', id);
+        const invoiceSnap = await getDoc(invoiceRef);
+        if (!invoiceSnap.exists()) { navigate('/portal/dashboard'); return; }
+        setInvoice({ id: invoiceSnap.id, ...invoiceSnap.data() });
       } catch (err) {
         console.error(err);
       } finally {
