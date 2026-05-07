@@ -617,6 +617,16 @@ function SubmissionsPanel() {
     finally { setLoading(false); }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this submission? This cannot be undone.')) return;
+    try {
+      await deleteDoc(doc(db, 'portal_submissions', id));
+      fetchSubs();
+    } catch (err) {
+      alert("Error deleting submission: " + err.message);
+    }
+  };
+
   useEffect(() => { fetchSubs(); }, []);
 
   const handleApproveAndPay = async (sub) => {
@@ -639,7 +649,7 @@ function SubmissionsPanel() {
 
       // 1. Update submission in Firestore
       await updateDoc(doc(db, 'portal_submissions', sub.id), {
-        status: 'paid',
+        status: 'completed',
         adminUtrId: pForm.utrId,
         adminProofUrl: proofUrl,
         updatedAt: serverTimestamp()
@@ -656,7 +666,7 @@ function SubmissionsPanel() {
       if (!invSnap.empty) {
         const invDoc = invSnap.docs[0];
         await updateDoc(doc(db, 'portal_invoices', invDoc.id), {
-          status: 'paid',
+          status: 'completed',
           utrId: pForm.utrId,
           adminProofUrl: proofUrl || '',
           updatedAt: serverTimestamp()
@@ -702,26 +712,35 @@ function SubmissionsPanel() {
         <button className="refresh-btn" onClick={fetchSubs}><RefreshCw size={18}/></button>
       </div>
       {loading ? <div className="dash-loader"><div className="spinner"/></div> : (
-        <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+        <div className="admin-subs-list">
           {subs.length === 0 && <div className="dash-empty"><Filter size={48}/><h3>No submissions yet</h3></div>}
           {subs.map(sub => (
-            <div key={sub.id} className="admin-sub-card">
-              <div className="admin-sub-card__header" onClick={() => setExpanded(expanded === sub.id ? null : sub.id)}>
+            <div key={sub.id} className="submission-card-premium">
+              <div 
+                className="sub-card-header"
+                onClick={() => setExpanded(expanded === sub.id ? null : sub.id)}
+              >
                 <div>
-                  <span className="row-name">{sub.dealTitle}</span>
-                  <span style={{marginLeft:'1rem',color:'var(--dash-muted)',fontSize:'0.85rem'}}>{sub.creatorName}</span>
+                  <div style={{fontWeight:800, fontSize:'1.1rem', marginBottom:'0.25rem'}}>{sub.creatorName}</div>
+                  <div style={{color:'#71717a', fontSize:'0.85rem'}}>{sub.dealTitle} • {sub.createdAt.toLocaleDateString()}</div>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:'1rem'}}>
                   <StatusBadge status={sub.status}/>
-                  {expanded === sub.id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+                  <div style={{display:'flex', gap:'0.4rem'}} onClick={e => e.stopPropagation()}>
+                    <button className="row-delete-btn" onClick={() => handleDelete(sub.id)} style={{padding:'4px'}} title="Delete Submission">
+                      <Trash2 size={16}/>
+                    </button>
+                    <button className="row-view-btn" style={{background:'rgba(255,255,255,0.05)', color:'#fff', padding:'4px', border:'none', borderRadius:'4px'}} onClick={() => setExpanded(expanded === sub.id ? null : sub.id)}>
+                      {expanded === sub.id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+                    </button>
+                  </div>
                 </div>
               </div>
               {expanded === sub.id && (
-                <div className="admin-sub-card__body">
-                  <div className="admin-sub-grid">
+                <div className="sub-card-body">
+                  <div className="admin-sub-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'2rem',marginBottom:'2rem'}}>
                     <div className="portal-review-section">
                       <h4>Content Proof</h4>
-                      {/* Platform badge */}
                       {sub.contentPlatform && (
                         <div className="portal-review-row">
                           <span>Platform</span>
@@ -779,7 +798,7 @@ function SubmissionsPanel() {
                     </div>
                   </div>
 
-                  {sub.status === 'paid' && (
+                  {sub.status === 'completed' && (
                     <div className="portal-alert portal-alert--success" style={{marginTop:'1rem'}}>
                       <strong>Paid & Invoice Generated</strong><br/>
                       UTR: {sub.adminUtrId}
@@ -844,36 +863,46 @@ function InvoicesPanel() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const querySnapshot = await getDocs(collection(db, 'portal_invoices'));
-        const data = querySnapshot.docs.map(doc => {
-          const d = doc.data();
-          return {
-            id: doc.id,
-            ...d,
-            status: d.Status || d.status || 'unpaid',
-            creatorName: d.CreatorName || d.creatorName || '—',
-            amount: d.Amount || d.amount || 0,
-            createdAt: d.createdAt?.toDate() || (d.Date ? new Date(d.Date) : new Date())
-          };
-        });
-        data.sort((a, b) => b.createdAt - a.createdAt);
-        setInvoices(data);
-      } catch (err) { console.error(err); }
-      finally { setLoading(false); }
-    })();
-  }, []);
+  const fetchInvoices = async () => {
+    setLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, 'portal_invoices'));
+      const data = querySnapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          ...d,
+          status: d.Status || d.status || 'unpaid',
+          creatorName: d.CreatorName || d.creatorName || '—',
+          amount: d.Amount || d.amount || 0,
+          createdAt: d.createdAt?.toDate() || (d.Date ? new Date(d.Date) : new Date())
+        };
+      });
+      data.sort((a, b) => b.createdAt - a.createdAt);
+      setInvoices(data);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this invoice?')) return;
+    try {
+      await deleteDoc(doc(db, 'portal_invoices', id));
+      fetchInvoices();
+    } catch (err) {
+      alert("Error deleting invoice: " + err.message);
+    }
+  };
+
+  useEffect(() => { fetchInvoices(); }, []);
 
   return (
     <div>
-      <h2 style={{color:'var(--dash-text)',marginBottom:'1.5rem'}}>Invoices</h2>
+      <h2 style={{color:'#fff',marginBottom:'1.5rem', fontFamily:'Outfit', fontWeight:800}}>Invoices</h2>
       {loading ? <div className="dash-loader"><div className="spinner"/></div> : (
-        <div className="dash-table-wrap">
+        <div className="dash-card-premium">
           <table className="dash-table">
-            <thead><tr><th>Invoice ID</th><th>Creator</th><th>Deal</th><th>Amount</th><th>Date</th><th>Status</th><th>View</th></tr></thead>
+            <thead><tr><th>Invoice ID</th><th>Creator</th><th>Deal</th><th>Amount</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               {invoices.map(inv => (
                 <tr key={inv.id}>
@@ -884,9 +913,14 @@ function InvoicesPanel() {
                   <td><div>{inv.date}</div></td>
                   <td><StatusBadge status={inv.status}/></td>
                   <td>
-                    <Link to={`/portal/invoice/${inv.id}`} className="row-view-btn" title="View Invoice">
-                      <Eye size={18}/>
-                    </Link>
+                    <div style={{display:'flex', gap:'0.5rem'}}>
+                      <Link to={`/portal/invoice/${inv.id}`} className="row-view-btn" title="View Invoice">
+                        <Eye size={18}/>
+                      </Link>
+                      <button className="row-delete-btn" onClick={() => handleDelete(inv.id)} title="Delete Invoice">
+                        <Trash2 size={18}/>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

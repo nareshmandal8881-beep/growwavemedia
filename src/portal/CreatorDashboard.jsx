@@ -10,7 +10,7 @@ import { Helmet } from 'react-helmet-async';
 import StatusBadge from './components/StatusBadge';
 import {
   LayoutDashboard, FileText, User, LogOut,
-  PlusCircle, TrendingUp, Clock, CheckCircle, RefreshCw,
+  PlusCircle, TrendingUp, Clock, CheckCircle, RefreshCw, Trash2, Eye
 } from 'lucide-react';
 
 export default function CreatorDashboard() {
@@ -142,6 +142,61 @@ export default function CreatorDashboard() {
     return unsub;
   }, [navigate]);
 
+  const earningsByMonth = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    const data = months.map(m => ({ month: m, amount: 0 }));
+    
+    deals.filter(d => d.status === 'completed').forEach(d => {
+      const date = d.createdAt?.toDate ? d.createdAt.toDate() : new Date();
+      if (date.getFullYear() === currentYear) {
+        data[date.getMonth()].amount += (Number(d.amount) || 0);
+      }
+    });
+    return data;
+  }, [deals]);
+
+  const maxEarning = Math.max(...earningsByMonth.map(d => d.amount), 1000);
+
+  const fetchInvoices = async () => {
+    if (!creator) return;
+    try {
+      const iq = query(
+        collection(db, 'portal_invoices'), 
+        or(
+          where('creatorId', '==', creator.id),
+          where('CreatorId', '==', creator.id),
+          where('creatorName', '==', creator.name),
+          where('CreatorName', '==', creator.name)
+        )
+      );
+      const iSnap = await getDocs(iq);
+      const fetchedInvoices = iSnap.docs.map(doc => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          ...d,
+          status: d.Status || d.status || 'unpaid',
+          amount: d.Amount || d.amount || 0,
+          createdAt: d.createdAt || (d.Date ? { toDate: () => new Date(d.Date) } : null)
+        };
+      });
+      fetchedInvoices.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+      setInvoices(fetchedInvoices);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDeleteInvoice = async (id) => {
+    if (!window.confirm('Delete this invoice? This cannot be undone.')) return;
+    try {
+      await deleteDoc(doc(db, 'portal_invoices', id));
+      fetchInvoices();
+      alert('Invoice deleted.');
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const handleLogout = async () => {
     await signOut(auth);
     navigate('/portal/login');
@@ -244,8 +299,21 @@ export default function CreatorDashboard() {
               </div>
 
               {/* Stats */}
-              <div className="portal-stats-grid">
-                {stats.map((s, i) => (
+              {/* Agency Notice Board */}
+          <div className="portal-notice-board" style={{ marginBottom: '2.5rem' }}>
+            <div className="portal-notice-card">
+              <div className="portal-notice-icon">
+                <RefreshCw size={20} className="spin-slow" />
+              </div>
+              <div className="portal-notice-content">
+                <h4>Grow Wave Media • Updates</h4>
+                <p>Welcome to your new premium dashboard! You can now track your revenue trends and manage your signatures directly from your profile.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="portal-stats">
+            {stats.map((s, i) => (
                   <div key={i} className="portal-stat-card">
                     <div className="portal-stat-card__icon" style={{ color: s.color }}>
                       {s.icon}
@@ -256,7 +324,36 @@ export default function CreatorDashboard() {
                     </div>
                   </div>
                 ))}
+          </div>
+
+          {/* Revenue Insights Chart */}
+          <div className="portal-card-premium" style={{ marginBottom: '2.5rem', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginBottom: '0.25rem' }}>Revenue Insights</h3>
+                <p style={{ color: 'var(--portal-muted)', fontSize: '0.85rem' }}>Monthly earnings performance for {new Date().getFullYear()}</p>
               </div>
+              <TrendingUp color="var(--portal-primary)" size={24} />
+            </div>
+            
+            <div className="revenue-chart-container">
+              {earningsByMonth.map((d, i) => (
+                <div key={d.month} className="revenue-chart-col">
+                  <div className="revenue-chart-bar-wrap">
+                    <div 
+                      className="revenue-chart-bar" 
+                      style={{ height: `${(d.amount / maxEarning) * 100}%` }}
+                    >
+                      {d.amount > 0 && <span className="revenue-chart-tooltip">₹{d.amount.toLocaleString()}</span>}
+                    </div>
+                  </div>
+                  <span className="revenue-chart-label">{d.month}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="portal-grid">
 
               {/* Deals Tab */}
               {tab === 'portal_deals' && (
@@ -358,12 +455,21 @@ export default function CreatorDashboard() {
                               <td>{inv.date}</td>
                               <td><StatusBadge status={inv.status} /></td>
                               <td>
-                                <Link
-                                  to={`/portal/invoice/${inv.id}`}
-                                  className="portal-btn portal-btn--sm portal-btn--ghost"
-                                >
-                                  {inv.status === 'pending_signature' ? 'Sign Now' : 'View'}
-                                </Link>
+                                <div style={{display:'flex', gap:'0.5rem'}}>
+                                  <Link
+                                    to={`/portal/invoice/${inv.id}`}
+                                    className="portal-btn portal-btn--sm portal-btn--ghost"
+                                  >
+                                    <Eye size={14}/> {inv.status === 'pending_signature' ? 'Sign' : 'View'}
+                                  </Link>
+                                  <button 
+                                    className="portal-btn portal-btn--sm portal-btn--ghost" 
+                                    style={{color:'var(--portal-danger)', borderColor:'rgba(239,68,68,0.2)'}}
+                                    onClick={() => handleDeleteInvoice(inv.id)}
+                                  >
+                                    <Trash2 size={14}/>
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           ))}
