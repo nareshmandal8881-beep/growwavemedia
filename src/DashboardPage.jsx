@@ -478,13 +478,21 @@ function DealsPanel() {
   const handleApproveDeal = async (id) => {
     if (!window.confirm('Approve this deal and notify the creator?')) return;
     try {
-      await updateDoc(doc(db, 'portal_deals', id), {
+      // Optimistic UI update
+      setDeals(prev => prev.map(d => d.id === id ? {...d, status: 'approved', Status: 'approved'} : d));
+      
+      const dealRef = doc(db, 'portal_deals', id);
+      await updateDoc(dealRef, {
         status: 'approved',
         Status: 'approved',
         updatedAt: serverTimestamp()
       });
-      fetchAll();
-    } catch (err) { console.error(err); }
+      console.log("Deal approved in Firestore:", id);
+    } catch (err) { 
+      console.error("Approve Error:", err);
+      alert("Failed to approve deal. Please check your internet connection.");
+      fetchAll(); // Revert on error
+    }
   };
 
   const PLATFORMS = ['Instagram','YouTube','Facebook','Twitter/X','LinkedIn','Other'];

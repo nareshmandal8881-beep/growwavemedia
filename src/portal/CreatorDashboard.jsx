@@ -82,14 +82,14 @@ export default function CreatorDashboard() {
           upiId: creatorData.upiId || ''
         });
 
-        // 2. Fetch assigned deals (Very robust check: ID or Name)
+        // 2. Fetch assigned deals (Check by ID or Name for migration compatibility)
         const dq = query(
           collection(db, 'portal_deals'), 
           or(
             where('creatorId', '==', creatorData.id),
             where('CreatorId', '==', creatorData.id),
-            where('creatorName', '==', creatorData.name),
-            where('CreatorName', '==', creatorData.name)
+            where('creatorName', '==', (creatorData.name || '').trim()),
+            where('CreatorName', '==', (creatorData.name || '').trim())
           )
         );
         const dSnap = await getDocs(dq);
